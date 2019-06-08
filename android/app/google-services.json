@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "305054251069",
+    "firebase_url": "https://matchit-nus2019.firebaseio.com",
+    "project_id": "matchit-nus2019",
+    "storage_bucket": "matchit-nus2019.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:305054251069:android:fd4c5bdb0bfe653e",
+        "android_client_info": {
+          "package_name": "com.matchit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "305054251069-qutomudk0hiis6v4687q8gop67gl3e9q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdA8LyIjsiBEg6xoIiP-ayElkdNA0lCF0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "305054251069-qutomudk0hiis6v4687q8gop67gl3e9q.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "305054251069-etnmp50pr924m1mqsd12ddirvlac4f4f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.MatchIt"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
