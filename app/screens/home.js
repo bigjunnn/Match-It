@@ -25,6 +25,10 @@ export default class Home extends React.Component {
           Hi {currentUser && currentUser.email}!
         </Text>
 
+        <Button block warning style={styles.submit} onPress={() => this.props.navigation.navigate("Create")}>
+          <Text>Create Listing</Text>
+        </Button>
+
         <Button block danger style={styles.submit} onPress={this.handleSignOut}>
           <Text>Sign Out</Text>
         </Button>

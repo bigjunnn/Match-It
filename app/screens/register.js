@@ -16,7 +16,7 @@ var width = Dimensions.get("window").width
 
 export default class Register extends React.Component {
   // Manage State
-  state = { email: "", password: "", errorMessage: "" }
+  state = { username: "", email: "", password: "", confirm_password: "", errorMessage: "" }
 
   // Method to handle SignUp
   handleSignUp = () => {
@@ -35,8 +35,15 @@ export default class Register extends React.Component {
     // Checking whether the user is created
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        alert("Your account has been created!")
-        this.props.navigation.navigate("Home")
+        firebase.database().ref('Users').child(user.uid).set({
+          email: user.email,
+          userid: user.uid,
+          username: this.state.username,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+          alert("Your account has been created!")
+          this.props.navigation.navigate("Home")
+        })
       }
     })
   }
@@ -56,6 +63,16 @@ export default class Register extends React.Component {
         </Title>
 
         <Form style={({ color: "black" }, styles.input)}>
+          <Item floatingLabel>
+            <Label>Username</Label>
+            <Input
+              autoCapitalize="none"
+              onChangeText={username => this.setState({ username })}
+              value={this.state.username}
+              maxLength={12}
+            />
+          </Item>
+
           <Item floatingLabel>
             <Label>Email</Label>
             <Input

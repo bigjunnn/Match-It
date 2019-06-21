@@ -4,6 +4,7 @@ import { createStackNavigator, createAppContainer } from 'react-navigation'
 import loginScreen from './screens/login'
 import registerScreen from './screens/register'
 import homeScreen from './screens/home'
+import createScreen from './screens/create'
 import loadScreen from './screens/loading'
 
 const AppStackNavigator = createStackNavigator(
@@ -28,6 +29,12 @@ const AppStackNavigator = createStackNavigator(
         headerStyle: {
           backgroundColor: '#fffcfc'
         },
+        header: null
+      })
+    },
+    Create: {
+      screen: createScreen,
+      navigationOptions: () => ({
         header: null
       })
     }
