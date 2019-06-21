@@ -6,6 +6,8 @@ import registerScreen from './screens/register'
 import homeScreen from './screens/home'
 import createScreen from './screens/create'
 import loadScreen from './screens/loading'
+import profileScreen from './screens/profile'
+import detailsScreen from './screens/details'
 
 const AppStackNavigator = createStackNavigator(
   {
@@ -34,6 +36,21 @@ const AppStackNavigator = createStackNavigator(
     },
     Create: {
       screen: createScreen,
+      navigationOptions: () => ({
+        headerTitle: "Add Listing",
+        headerStyle: {
+          backgroundColor: '#fffcfc'
+        },
+      })
+    },
+    Profile: {
+      screen: profileScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Details: {
+      screen: detailsScreen,
       navigationOptions: () => ({
         header: null
       })

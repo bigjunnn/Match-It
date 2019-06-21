@@ -25,6 +25,10 @@ export default class Home extends React.Component {
           Hi {currentUser && currentUser.email}!
         </Text>
 
+        <Button block default style={styles.submit} onPress={() => this.props.navigation.navigate("Profile")}>
+          <Text>My Profile</Text>
+        </Button>
+
         <Button block warning style={styles.submit} onPress={() => this.props.navigation.navigate("Create")}>
           <Text>Create Listing</Text>
         </Button>
@@ -44,7 +48,7 @@ const styles = StyleSheet.create({
   },
   submit: {
     opacity: 0.8,
-    marginTop: 120,
+    marginTop: 20,
     paddingTop: 10,
     marginLeft: 90,
     marginRight: 90
