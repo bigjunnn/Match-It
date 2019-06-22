@@ -8,6 +8,8 @@ import createScreen from './screens/create'
 import loadScreen from './screens/loading'
 import profileScreen from './screens/profile'
 import detailsScreen from './screens/details'
+import updateScreen from './screens/updateprofile'
+import chatScreen from './screens/chat'
 
 const AppStackNavigator = createStackNavigator(
   {
@@ -37,10 +39,10 @@ const AppStackNavigator = createStackNavigator(
     Create: {
       screen: createScreen,
       navigationOptions: () => ({
-        headerTitle: "Add Listing",
+        headerTitle: 'Add Listing',
         headerStyle: {
           backgroundColor: '#fffcfc'
-        },
+        }
       })
     },
     Profile: {
@@ -51,6 +53,18 @@ const AppStackNavigator = createStackNavigator(
     },
     Details: {
       screen: detailsScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Update: {
+      screen: updateScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Chat: {
+      screen: chatScreen,
       navigationOptions: () => ({
         header: null
       })

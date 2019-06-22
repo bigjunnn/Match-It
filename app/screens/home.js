@@ -25,12 +25,40 @@ export default class Home extends React.Component {
           Hi {currentUser && currentUser.email}!
         </Text>
 
-        <Button block default style={styles.submit} onPress={() => this.props.navigation.navigate("Profile")}>
+        <Button
+          block
+          default
+          style={styles.submit}
+          onPress={() => this.props.navigation.navigate("Profile")}
+        >
           <Text>My Profile</Text>
         </Button>
 
-        <Button block warning style={styles.submit} onPress={() => this.props.navigation.navigate("Create")}>
+        <Button
+          block
+          warning
+          style={styles.submit}
+          onPress={() => this.props.navigation.navigate("Create")}
+        >
           <Text>Create Listing</Text>
+        </Button>
+
+        <Button
+          block
+          warning
+          style={styles.submit}
+          onPress={() => this.props.navigation.navigate("Update")}
+        >
+          <Text>Update Details</Text>
+        </Button>
+
+        <Button
+          block
+          warning
+          style={styles.submit}
+          onPress={() => this.props.navigation.navigate("Chat")}
+        >
+          <Text>Navigate to Chat</Text>
         </Button>
 
         <Button block danger style={styles.submit} onPress={this.handleSignOut}>
