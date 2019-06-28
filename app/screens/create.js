@@ -13,7 +13,8 @@ import {
   Platform
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
-import { Item, Input, Label, Form, Button, Content } from "native-base"
+import { Item, Input, Label, Form, Subtitle } from "native-base"
+import { Card, Header, Button } from "react-native-elements";
 import firebase from "firebase"
 import uuid from 'uuid/v4'; // Import UUID to generate UUID
 import RNFetchBlob from 'rn-fetch-blob'
@@ -86,8 +87,14 @@ export default class Home extends React.Component {
     let photo = this.state.photo
 
     return (
-      <ScrollView>
       <View style={styles.container}>
+      <Header 
+      centerComponent={{text: 'Create Listing', style:{ fontSize: 18, fontWeight: 'bold'}}}
+      backgroundColor='#eaede6'
+      />
+
+      <ScrollView>
+      <Card>
         <Form style={styles.input}> 
         <Item floatingLabel>
           <Label>Title</Label>
@@ -100,9 +107,10 @@ export default class Home extends React.Component {
         
         <View style={ styles.image } >
         {/** Display selected image */}
-        <Image 
-          source={{ uri: photo.path }}
-          style={{ width: 250, height: 200 }}
+        <Image //item's image
+        source={{uri: photo.path}}
+        resizeMode= 'cover'
+        style={{height: height*0.3, width: width*0.9}}
         />
         <TouchableOpacity
         style={styles.button}
@@ -112,6 +120,7 @@ export default class Home extends React.Component {
         </TouchableOpacity>
         </View>
 
+        <Subtitle>Package</Subtitle>
         <View style={{flexDirection: "row", width: width * 0.6, height: 50 }}>
           <View style={{flex: 1}}>
           <Item underline style={{justifyContent: 'flex-end',}}>
@@ -121,9 +130,10 @@ export default class Home extends React.Component {
             onChangeText={price => this.setState({ price })}
             value={this.state.price}
             />
-            <Text>/</Text>
+            <Text> / </Text>
           </Item>
           </View>
+
           <View style={{flex: 1}}>
           <Item underline style={{justifyContent: 'flex-end',}}>
             <Input
@@ -133,10 +143,9 @@ export default class Home extends React.Component {
             />
           </Item>
           </View>
-
         </View>
 
-        <View>
+        <View style={ styles.desciption_box }>
         <Item stackedLabel style={ styles.description }>
           <Label>Description</Label>
           <Input
@@ -152,13 +161,18 @@ export default class Home extends React.Component {
         </View>
 
         </Form>
+        </Card>
 
-        <Button style={styles.submit_btn} onPress={this.listingForm}>
-          <Text>Submit</Text>
-        </Button>
+        <View style={styles.submit_btn}>
+        <Button
+        containerStyle={{width: width * 0.80}}
+        title="Submit"
+        onPress={this.listingForm}
+        />
+        </View>
 
-      </View>
       </ScrollView>
+      </View>
     )
   }
 }
@@ -171,33 +185,38 @@ const styles = StyleSheet.create({
   input: {
     alignItems: "center",
     justifyContent: "center",
-    width: width * 0.8
+    width: width * 0.85
   },
   button: {
     backgroundColor: "#DDDDDD",
-    padding: 10
+    padding: 10,
+    width: width * 0.8
   },
   submit_btn: {
-    width:170,
-    backgroundColor: 'rgb(3, 154, 229)',
     marginTop: 20,
-    justifyContent:"center",
-    alignItems: "center"
+    justifyContent: "center",
+    alignItems: "center",
+    padding:10
   },
-  description: {
+  description_box: {
     padding: 10,
     marginTop: 10,
-    width: width * 0.8, 
-    height: height * 0.3, 
+    alignItems: 'center',
+    justifyContent: 'center',
     borderColor: 'gray', 
     borderWidth: 1,
     borderRadius: 1,
-    borderTopWidth: 0.2,
-    borderRightWidth: 0.2,
-    borderLeftWidth: 0.2
+    borderTopWidth: 1
+  },
+  description: {
+    padding: 10,
+    width: width * 0.85, 
+    height: height * 0.3
   },
   image: {
     padding: 10,
-    marginTop: 10
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
   }
 })

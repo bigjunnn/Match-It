@@ -80,6 +80,7 @@ export default class Register extends React.Component {
   }
 
   render() {
+    let user = firebase.auth().currentUser
     return (
       <View style={styles.container}>
         <Title

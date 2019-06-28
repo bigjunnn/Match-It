@@ -1,4 +1,6 @@
 import React from "react"
+import { View } from "react-native"
+import { Header } from "react-native-elements"
 import { GiftedChat } from "react-native-gifted-chat"
 import firebase from "firebase"
 
@@ -11,7 +13,9 @@ export default class Chat extends React.Component {
 
   // Define state for messages
   state = {
-    messages: []
+    messages: [],
+    partyid: this.props.navigation.state.params.ref,
+    partyname: this.props.navigation.state.params.ref_name
   }
 
   // Getters
@@ -22,13 +26,15 @@ export default class Chat extends React.Component {
   // NOTE: use these accounts to test for chats
   // Chat between hello123 + testing123 => tester1 cannot see the messages
   get chateeUID() {
-    return "xEjxOG70eWON9urObTWm4IBzkLC2"
+    return this.state.partyid
     // UID for hello123 account, HARD CODED
-    // xEjxOG70eWON9urObTWm4IBzkLC2
+    // xEjxOG70eWON9urObTWm4IBzkLC2 --
     // UID for tester1 account, HARD CODED
     // I8UHUaV2EETZqGCQmIBM8Xc8Ufo2
     // UID for testing123 account, HARD CODED
     // 6MabX34Mn7XN4kI9RW27DuAsvoa2
+    // UID for tester123 account, HARD CODED
+    // exOuhQVSLfSaf5bdda1hInqwcuw2
   }
 
   get ref() {
@@ -108,11 +114,18 @@ export default class Chat extends React.Component {
 
   render() {
     return (
+      <View style={{flex: 1}}>
+      <Header 
+      centerComponent={{text: `${this.state.partyname}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
+      backgroundColor='#e6ebed'
+      />
+
       <GiftedChat
         messages={this.state.messages}
         onSend={this.send}
         user={this.user}
       />
+      </View>
     )
   }
 

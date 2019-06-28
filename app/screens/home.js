@@ -1,69 +1,83 @@
 import React from "react"
-import { StyleSheet, Platform, Image, Text, View } from "react-native"
-import { Button } from "native-base"
+import { 
+  StyleSheet,  
+  Text, 
+  View,
+  FlatList,
+  TouchableOpacity,
+  Dimensions,
+  ScrollView 
+} from "react-native"
+import { Title } from "native-base"
+import { Header, ListItem, Icon } from "react-native-elements";
 import firebase from "firebase"
 
+var width = Dimensions.get("window").width
+var height = Dimensions.get("window").height
 export default class Home extends React.Component {
   // Define current state
-  state = { currentUser: null }
+  state = { listing:[] }
 
   handleSignOut = () => {
     firebase.auth().signOut().then(this.props.navigation.navigate("Login"))
   }
 
   componentDidMount() {
-    const { currentUser } = firebase.auth()
-    this.setState({ currentUser })
+    let listing_ref = firebase.database().ref('Listing')
+
+    // get user's listings from firebase db in array form
+    listing_ref.once('value').then(snapshot => {
+         var items = []
+         snapshot.forEach((child) => {
+           items.push({
+            key: child.key,
+            title: child.val().title,
+            price: child.val().price,
+            price_type: child.val().price_type,
+            photo: child.val().photo
+           })
+        })
+        this.setState({ listings: items})
+    })
   }
 
   render() {
-    const { currentUser } = this.state
+    const user = firebase.auth().currentUser
 
     return (
+      <View>
+      <Header 
+      leftComponent={<Icon name='sc-telegram' type='evilicon' onPress={this.handleSignOut}/>}
+      centerComponent={{text: 'Matchit', style:{ fontSize: 30, fontFamily: "Lobster-Regular"}}}
+      // rightComponent={<Icon name='search' />}
+      backgroundColor='#f7ccc3'
+      />
+
+      <ScrollView>
       <View style={styles.container}>
         <Text>
-          Hi {currentUser && currentUser.email}!
+          Hi {user && user.email}!
         </Text>
+        <Title>View All Listing</Title>
+      
+        <FlatList
+        style={styles.fl}
+        data={ this.state.listings }
+        keyExtractor={this.keyExtractor}
+        renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => this.props.navigation.navigate("Details", {ref: item.key})}>
+            <ListItem
+              leftAvatar={{ size:'large' , rounded: false, source: { uri: item.photo } }}
+              title={item.title}
+              subtitle={`${item.price} / ${item.price_type}`}
+              style = {{width: width * 0.9}}
+            />
+            </TouchableOpacity>
+        )} 
+        />
+      </View>
+      </ScrollView>
 
-        <Button
-          block
-          default
-          style={styles.submit}
-          onPress={() => this.props.navigation.navigate("Profile")}
-        >
-          <Text>My Profile</Text>
-        </Button>
-
-        <Button
-          block
-          warning
-          style={styles.submit}
-          onPress={() => this.props.navigation.navigate("Create")}
-        >
-          <Text>Create Listing</Text>
-        </Button>
-
-        <Button
-          block
-          warning
-          style={styles.submit}
-          onPress={() => this.props.navigation.navigate("Update")}
-        >
-          <Text>Update Details</Text>
-        </Button>
-
-        <Button
-          block
-          warning
-          style={styles.submit}
-          onPress={() => this.props.navigation.navigate("Chat")}
-        >
-          <Text>Navigate to Chat</Text>
-        </Button>
-
-        <Button block danger style={styles.submit} onPress={this.handleSignOut}>
-          <Text>Sign Out</Text>
-        </Button>
       </View>
     )
   }

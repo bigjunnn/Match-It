@@ -16,16 +16,21 @@ import firebase from "firebase"
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class Profile extends React.Component {
-    state = {listings: [], activeIndex: 0}
+    state = {
+      listings: [], 
+      activeIndex: 0, 
+      servicerid: this.props.navigation.state.params.ref, 
+      servicer: ''
+    }
     
     keyExtractor = (item, index) => index.toString()
 
     componentDidMount() {
-    let user = firebase.auth().currentUser
+    let servicer = this.state.servicerid
     let listing_ref = firebase.database().ref('Listing')
 
-    // get user's listings from firebase db in array form
-    var query = listing_ref.orderByChild("userid").equalTo(user.uid)
+    // get servicer's listings from firebase db in array form
+    var query = listing_ref.orderByChild("userid").equalTo(servicer)
     query.once('value').then(snapshot => {
          var items = []
          snapshot.forEach((child) => {
@@ -38,6 +43,17 @@ export default class Profile extends React.Component {
            })
         })
         this.setState({ listings: items})
+    })
+    
+    // get servicer's info firebase db
+    let user_ref = firebase.database().ref('Users').child(servicer)
+    user_ref.once("value").then(snapshot => {
+      var user = {
+          userid: snapshot.val().userid,
+          username: snapshot.val().username,
+          profilepic: snapshot.val().profilepic
+      }
+      this.setState({ servicer: user })
     })
   }
 
@@ -72,14 +88,15 @@ export default class Profile extends React.Component {
   }
 
   render() {
-    let user = firebase.auth().currentUser
+    let user = this.state.servicer
     return (
       <View style={styles.container}>
         <Header 
-        centerComponent={{text: `${user.displayName}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
+        centerComponent={{text: `${user.username}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
         rightComponent={
           <Icon 
-          name='bookmark'
+          name='message' 
+          onPress= {() => this.props.navigation.navigate("Chat", {ref: this.state.servicer.userid, ref_name: this.state.servicer.username})}
           />
         }
         backgroundColor='#e6ebed'
@@ -90,15 +107,13 @@ export default class Profile extends React.Component {
           <View>
           <Avatar
             size='xlarge'
-            source={{uri: user.photoURL}} 
-            showEditButton
-            onEditPress={()=>this.props.navigation.navigate("Update")}
+            source={{uri: user.profilepic}} 
             containerStyle={{marginTop:20}}
           />
           </View>
 
           <View style={{flexDirection: 'column', justifyContent: 'center'}}>
-            <Title style={{fontSize:30}}>{user.displayName}</Title>
+            <Title style={{fontSize:30}}>{user.username}</Title>
             <Subtitle>User since //</Subtitle>
             <Rating
               imageSize={20}
@@ -115,12 +130,11 @@ export default class Profile extends React.Component {
           transparent active={this.state.activeIndex == 0}
           title="SERVICES"
           color= {this.state.activeIndex == 0 ? '#874036' : '#2f3e66'}
-          back
           />
 
           <Button
           onPress={() => this.setState({activeIndex: 1})}
-          transparent active={this.state.activeIndex == 1}
+          ttransparent active={this.state.activeIndex == 1}
           title="REVIEWS"
           color= {this.state.activeIndex == 1 ? '#874036' : '#2f3e66'}
           />
