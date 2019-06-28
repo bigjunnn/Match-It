@@ -40,6 +40,7 @@ export default class Details extends React.Component {
         servicer_id: this.state.servicer.userid,
         servicer_name: this.state.servicer.username,
         itempic: this.state.details.photo,
+        itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {

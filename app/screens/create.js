@@ -89,8 +89,8 @@ export default class Home extends React.Component {
     return (
       <View style={styles.container}>
       <Header 
-      centerComponent={{text: 'Create Listing', style:{ fontSize: 18, fontWeight: 'bold'}}}
-      backgroundColor='#eaede6'
+      centerComponent={{text: 'Create Listing', style:{ fontSize: 20, fontWeight: 'bold'}}}
+      backgroundColor='white'
       />
 
       <ScrollView>

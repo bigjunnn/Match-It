@@ -7,7 +7,7 @@ import {
     ScrollView,
     Dimensions
 } from "react-native"
-import { Header, ListItem, ButtonGroup } from "react-native-elements"
+import { Header, ListItem, ButtonGroup, Icon, Button } from "react-native-elements"
 import firebase from "firebase"
 
 var width = Dimensions.get("window").width
@@ -22,16 +22,43 @@ export default class ChatLog extends React.Component {
         }
         this.updateIndex = this.updateIndex.bind(this)
       }
+      
+    keyExtractor = (item, index) => index.toString()
 
     updateIndex (selectedIndex) {
         this.setState({selectedIndex})
     }
 
-    keyExtractor = (item, index) => index.toString()
     renderSection() {
     if (this.state.selectedIndex == 0) { //Bookings
         return (
-        <Text style={{marginTop: 20, fontSize: 30}}> In Construction </Text>
+            <FlatList
+            data={ this.state.bookings }
+            keyExtractor={this.keyExtractor}
+            renderItem={({ item }) => (
+                <ListItem
+                style = {{width: width * 0.9}}
+                leftAvatar={{ size:'medium' , rounded: false, source: { uri: item.itempic } }}
+                title={`${item.itemname}`}
+                subtitle={`Servicer: ${item.servicer_name}`}
+                rightElement={
+                    <View style={{flexDirection:'row', width: width * 0.18}}>
+                    <Icon //PM servicer
+                    name="message" size={30} 
+                    containerStyle={{padding: 8}}
+                    onPress= {() => this.props.navigation.navigate("Chat", {ref: item.servicer_id, ref_name: item.servicer_name})}
+                    />
+
+                    <Button
+                    title="Rate"
+                    type="outline"
+                    onPress= {() => this.props.navigation.navigate("Rating", {ref: item.itemid})}
+                    />
+                    </View>
+                }
+                />
+            )} 
+            />
     )} else if (this.state.selectedIndex == 1) { //Pending
         return (
         <FlatList
@@ -39,10 +66,35 @@ export default class ChatLog extends React.Component {
         keyExtractor={this.keyExtractor}
         renderItem={({ item }) => (
             <ListItem
+            style = {{width: width * 0.9}}
             leftAvatar={{ size:'medium' , rounded: false, source: { uri: item.itempic } }}
             title={`${item.itemname}`}
             subtitle={`Requester: ${item.request_name}`}
-            style = {{width: width * 0.9}}
+            rightIcon = {
+                <View style={{flexDirection: 'row', width: width * 0.15}}>
+                <Icon //accept request
+                name="check" 
+                type="antdesign" 
+                color='green' size={20} 
+                containerStyle={{padding: 5}}
+                onPress= {() => this.acceptBooking(item.key)}
+                />
+
+                <Icon //reject request
+                name="close" 
+                type="antdesign" 
+                color='red' size={20} 
+                containerStyle={{padding: 5}}
+                onPress= {() => this.removePending(item.key)}
+                />
+
+                <Icon //PM requester
+                name="message" size={20} 
+                containerStyle={{padding: 5}}
+                onPress= {() => this.props.navigation.navigate("Chat", {ref: item.request_id, ref_name: item.request_name})}
+                />
+                </View>
+            }
             />
         )} 
         />
@@ -52,13 +104,15 @@ export default class ChatLog extends React.Component {
     )}
     }
 
-    pendingStorage() {
+    // render pending requests for user's services
+    showPending() {
     let user = firebase.auth().currentUser
     var query =  firebase.database().ref('Booking').child('Pending').orderByChild("servicer_id").equalTo(user.uid)
     query.once("value").then(snapshot => {
         var items = []
         snapshot.forEach(child => {
         items.push({
+            key: child.key,
             request_id: child.val().request_id,
             request_name: child.val().request_name,
             itempic: child.val().itempic,
@@ -70,8 +124,48 @@ export default class ChatLog extends React.Component {
     })
     }
 
+    // render confirmed booking services made by user
+    showBooking() {
+    let user = firebase.auth().currentUser
+    var query =  firebase.database().ref('Booking').child('Confirmed').orderByChild("request_id").equalTo(user.uid)
+    query.once("value").then(snapshot => {
+        var items = []
+        snapshot.forEach(child => {
+        items.push({
+            itemid: child.val().itemid,
+            servicer_id: child.val().servicer_id,
+            servicer_name: child.val().servicer_name,
+            itempic: child.val().itempic,
+            itemname: child.val().itemname,
+            createdAt: child.val().createdAt
+        })
+        })
+        this.setState({ bookings: items})
+    })
+    }
+
+    //remove pending of service - upon accept/ reject
+    removePending(key) {
+        firebase.database().ref('Booking').child('Pending').child('key').remove()
+    }
+
+    // confirm booking of service - accept
+    acceptBooking(key) {
+      firebase.database().ref('Booking').child('Pending').child(key).once("value").then(snapshot => {
+        let book_ref = firebase.database().ref('Booking').child('Confirmed')
+        book_ref.push(
+            snapshot.val()
+        ).then( ()=> {
+            this.removePending(key)
+        }).then(() => {
+            alert("Booking Confirmed!")
+        })
+      })
+    }
+
     componentDidMount() {
-        this.pendingStorage()
+        this.showPending()
+        this.showBooking()
     }
 
     render() {
@@ -82,10 +176,9 @@ export default class ChatLog extends React.Component {
         <View>
         <Header 
         centerComponent={{text: 'Notifications', style:{ fontSize: 20, fontWeight: 'bold'}}}
-        backgroundColor='#e6ebed'
+        backgroundColor='white'
         />
-
-        <ScrollView>
+        
         <View style={ styles.tabbar}>
         <ButtonGroup
         onPress={this.updateIndex}
@@ -94,6 +187,7 @@ export default class ChatLog extends React.Component {
         />
         </View>
 
+        <ScrollView>
         {/** tab view */}
         {this.renderSection()} 
         </ScrollView>

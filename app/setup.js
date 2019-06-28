@@ -17,6 +17,7 @@ import updateScreen from './screens/updateprofile'
 import chatScreen from './screens/chat'
 import inboxScreen from './screens/inbox'
 import servicerScreen from './screens/svc_profile'
+import ratingScreen from './screens/rating'
 
 const BottomTabNavigator = createBottomTabNavigator({
   Home: {
@@ -114,6 +115,12 @@ const AppStackNavigator = createStackNavigator(
     },
     ServicerProfile: {
       screen: servicerScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Rating: {
+      screen: ratingScreen,
       navigationOptions: () => ({
         header: null
       })

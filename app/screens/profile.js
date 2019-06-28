@@ -76,13 +76,13 @@ export default class Profile extends React.Component {
     return (
       <View style={styles.container}>
         <Header 
+        backgroundColor='white'
         centerComponent={{text: `${user.displayName}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
         rightComponent={
           <Icon 
           name='bookmark'
           />
         }
-        backgroundColor='#e6ebed'
         />
 
       <ScrollView>
