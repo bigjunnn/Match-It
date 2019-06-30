@@ -16,11 +16,19 @@ import firebase from "firebase"
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class Profile extends React.Component {
-    state = {listings: [], activeIndex: 0}
+    state = {
+      user: firebase.auth().currentUser, 
+      listings: [], 
+      activeIndex: 0, 
+      user_info: '', 
+      review_stars: 0.0, 
+      review_count: 0,
+      reviews: []
+    }
     
-    keyExtractor = (item, index) => index.toString()
+  keyExtractor = (item, index) => index.toString()
 
-    componentDidMount() {
+  componentDidMount() {
     let user = firebase.auth().currentUser
     let listing_ref = firebase.database().ref('Listing')
 
@@ -38,6 +46,31 @@ export default class Profile extends React.Component {
            })
         })
         this.setState({ listings: items})
+    })
+
+    // get user's info
+    let info = firebase.database().ref('Users/' + user.uid)
+    info.once("value", snapshot => {
+      this.setState({user_info: snapshot.val()})
+
+      if (snapshot.val().review !== undefined) {
+        let total_stars = snapshot.val().review.total_stars
+        let total_count = snapshot.val().review.count
+        var val = (total_stars / total_count)
+        this.setState({review_stars: val, review_count: total_count})
+        this.getReviews()
+      }
+    })
+  }
+
+  //get all reviews data
+  getReviews() {
+    firebase.database().ref('Review').child('Users').child(this.state.user.uid).once('value', snapshot => {
+      var items= []
+      snapshot.forEach(snap => {
+        items.push(snap.val())
+      })
+      this.setState({reviews: items})
     })
   }
 
@@ -62,13 +95,35 @@ export default class Profile extends React.Component {
         />
     )} else if (this.state.activeIndex == 1) { //REVIEWS
       return (
-        <Text style={{marginTop: 20, fontSize: 30}}> No Reviews Yet </Text>
+        <FlatList
+        style={styles.fl}
+        data={ this.state.reviews }
+        keyExtractor={this.keyExtractor}
+        renderItem={({ item }) => (
+            <ListItem
+              title={
+                <View style={{flexDirection: 'row'}}>
+                <Text style={{fontSize: 17, fontWeight: 'bold'}}>{item.reviewer_name}</Text>
+                <View style={{flexDirection: 'row', marginLeft: 10}}>
+                <Rating
+                imageSize={15}
+                fractions={1}
+                startingValue={item.provider_rate}
+                readonly
+                />
+                <Text style={{padding: 3, fontSize: 15}}>{item.provider_rate}/5</Text>
+                </View>
+                </View>
+              }
+              subtitle={`${item.provider_review}`}
+              style = {{width: width * 0.9}}
+            />
+        )} 
+        />
     )} else if (this.state.activeIndex == 2) { //SKILLS
       return (
         <Text style={{marginTop: 20, fontSize: 30}}>Coming Soon ...</Text>
     )}
-
-
   }
 
   render() {
@@ -78,11 +133,6 @@ export default class Profile extends React.Component {
         <Header 
         backgroundColor='white'
         centerComponent={{text: `${user.displayName}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
-        rightComponent={
-          <Icon 
-          name='bookmark'
-          />
-        }
         />
 
       <ScrollView>
@@ -98,14 +148,18 @@ export default class Profile extends React.Component {
           </View>
 
           <View style={{flexDirection: 'column', justifyContent: 'center'}}>
-            <Title style={{fontSize:30}}>{user.displayName}</Title>
+            <Text style={{fontSize:30, padding: 5, fontWeight:'bold'}}>{user.displayName}</Text>
             <Subtitle>User since //</Subtitle>
+            <View style={{flexDirection: 'row', alignContent: 'center', justifyContent: 'center'}}>
             <Rating
               imageSize={20}
-              startingValue={3}
+              fractions={1}
+              startingValue={this.state.review_stars}
               readonly
             />
-            <Text style={{padding: 10}}>//your description here</Text>
+            <Text style={{padding: 3, fontSize: 15}}>{this.state.review_stars} ({this.state.review_count})</Text>
+            </View>
+            <Text style={{padding: 10}}>// description here</Text>
           </View>
         </View> 
 

@@ -20,12 +20,15 @@ export default class Profile extends React.Component {
       listings: [], 
       activeIndex: 0, 
       servicerid: this.props.navigation.state.params.ref, 
-      servicer: ''
+      servicer: '',
+      review_stars: 0.0, 
+      review_count: 0,
+      reviews: []
     }
     
     keyExtractor = (item, index) => index.toString()
 
-    componentDidMount() {
+  componentDidMount() {
     let servicer = this.state.servicerid
     let listing_ref = firebase.database().ref('Listing')
 
@@ -48,12 +51,25 @@ export default class Profile extends React.Component {
     // get servicer's info firebase db
     let user_ref = firebase.database().ref('Users').child(servicer)
     user_ref.once("value").then(snapshot => {
-      var user = {
-          userid: snapshot.val().userid,
-          username: snapshot.val().username,
-          profilepic: snapshot.val().profilepic
+      this.setState({ servicer: snapshot.val()})
+    
+      if (snapshot.val().review !== undefined) {
+        let total_stars = snapshot.val().review.total_stars
+        let total_count = snapshot.val().review.count
+        var val = (total_stars / total_count)
+        this.setState({review_stars: val, review_count: total_count})
+        this.getReviews()
       }
-      this.setState({ servicer: user })
+    })
+  }
+
+  getReviews() {
+    firebase.database().ref('Review').child('Users').child(this.state.servicerid).once('value', snapshot => {
+      var items= []
+      snapshot.forEach(snap => {
+        items.push(snap.val())
+      })
+      this.setState({reviews: items})
     })
   }
 
@@ -78,13 +94,35 @@ export default class Profile extends React.Component {
         />
     )} else if (this.state.activeIndex == 1) { //REVIEWS
       return (
-        <Text style={{marginTop: 20, fontSize: 30}}> No Reviews Yet </Text>
+        <FlatList
+        style={styles.fl}
+        data={ this.state.reviews }
+        keyExtractor={this.keyExtractor}
+        renderItem={({ item }) => (
+            <ListItem
+              title={
+                <View style={{flexDirection: 'row'}}>
+                <Text style={{fontSize: 17, fontWeight: 'bold'}}>{item.reviewer_name}</Text>
+                <View style={{flexDirection: 'row', marginLeft: 10}}>
+                <Rating
+                imageSize={15}
+                fractions={1}
+                startingValue={item.provider_rate}
+                readonly
+                />
+                <Text style={{padding: 3, fontSize: 15}}>{item.provider_rate}/5</Text>
+                </View>
+                </View>
+              }
+              subtitle={`${item.provider_review}`}
+              style = {{width: width * 0.9}}
+            />
+        )} 
+        />
     )} else if (this.state.activeIndex == 2) { //SKILLS
       return (
         <Text style={{marginTop: 20, fontSize: 30}}>Coming Soon ...</Text>
     )}
-
-
   }
 
   render() {
@@ -92,14 +130,8 @@ export default class Profile extends React.Component {
     return (
       <View style={styles.container}>
         <Header 
-        centerComponent={{text: `${user.username}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
-        rightComponent={
-          <Icon 
-          name='message' 
-          onPress= {() => this.props.navigation.navigate("Chat", {ref: this.state.servicer.userid, ref_name: this.state.servicer.username})}
-          />
-        }
-        backgroundColor='#e6ebed'
+        backgroundColor='white'
+        centerComponent={{text: `${this.state.servicer.username}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
         />
 
       <ScrollView>
@@ -107,20 +139,24 @@ export default class Profile extends React.Component {
           <View>
           <Avatar
             size='xlarge'
-            source={{uri: user.profilepic}} 
+            source={{uri: user.photoURL}} 
             containerStyle={{marginTop:20}}
           />
           </View>
 
           <View style={{flexDirection: 'column', justifyContent: 'center'}}>
-            <Title style={{fontSize:30}}>{user.username}</Title>
+            <Text style={{fontSize:30, padding: 5, fontWeight:'bold'}}>{this.state.servicer.username}</Text>
             <Subtitle>User since //</Subtitle>
+            <View style={{flexDirection: 'row', alignContent: 'center', justifyContent: 'center'}}>
             <Rating
               imageSize={20}
-              startingValue={3}
+              fractions={1}
+              startingValue={this.state.review_stars}
               readonly
             />
-            <Text style={{padding: 10}}>//your description here</Text>
+            <Text style={{padding: 3, fontSize: 15}}>{this.state.review_stars} ({this.state.review_count})</Text>
+            </View>
+            <Text style={{padding: 10}}>// description here</Text>
           </View>
         </View> 
 
@@ -130,11 +166,12 @@ export default class Profile extends React.Component {
           transparent active={this.state.activeIndex == 0}
           title="SERVICES"
           color= {this.state.activeIndex == 0 ? '#874036' : '#2f3e66'}
+          back
           />
 
           <Button
           onPress={() => this.setState({activeIndex: 1})}
-          ttransparent active={this.state.activeIndex == 1}
+          transparent active={this.state.activeIndex == 1}
           title="REVIEWS"
           color= {this.state.activeIndex == 1 ? '#874036' : '#2f3e66'}
           />

@@ -69,7 +69,7 @@ export default class Home extends React.Component {
             <ListItem
               leftAvatar={{ size:'large' , rounded: false, source: { uri: item.photo } }}
               title={item.title}
-              subtitle={`${item.price} / ${item.price_type}`}
+              subtitle={`SGD ${item.price} / ${item.price_type}`}
               style = {{width: width * 0.9}}
             />
             </TouchableOpacity>
