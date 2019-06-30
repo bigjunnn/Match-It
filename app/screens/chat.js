@@ -4,8 +4,6 @@ import { Header } from "react-native-elements"
 import { GiftedChat } from "react-native-gifted-chat"
 import firebase from "firebase"
 
-// NOTE: Chat itself is working, hardcoded now
-// TO-DO: Able to get chateeID automatically, send images in chat + video maybe?
 export default class Chat extends React.Component {
   static navigationOptions = ({ navigation }) => ({
     title: (navigation.state.params || {}).name || "Chat!"
@@ -27,14 +25,6 @@ export default class Chat extends React.Component {
   // Chat between hello123 + testing123 => tester1 cannot see the messages
   get chateeUID() {
     return this.state.partyid
-    // UID for hello123 account, HARD CODED
-    // xEjxOG70eWON9urObTWm4IBzkLC2 --
-    // UID for tester1 account, HARD CODED
-    // I8UHUaV2EETZqGCQmIBM8Xc8Ufo2
-    // UID for testing123 account, HARD CODED
-    // 6MabX34Mn7XN4kI9RW27DuAsvoa2
-    // UID for tester123 account, HARD CODED
-    // exOuhQVSLfSaf5bdda1hInqwcuw2
   }
 
   get ref() {
@@ -114,17 +104,20 @@ export default class Chat extends React.Component {
 
   render() {
     return (
-      <View style={{flex: 1}}>
-      <Header 
-      centerComponent={{text: `${this.state.partyname}`, style:{ fontSize: 20, fontWeight: 'bold'}}}
-      backgroundColor='#e6ebed'
-      />
+      <View style={{ flex: 1 }}>
+        <Header
+          centerComponent={{
+            text: `${this.state.partyname}`,
+            style: { fontSize: 20, fontWeight: "bold" }
+          }}
+          backgroundColor="#e6ebed"
+        />
 
-      <GiftedChat
-        messages={this.state.messages}
-        onSend={this.send}
-        user={this.user}
-      />
+        <GiftedChat
+          messages={this.state.messages}
+          onSend={this.send}
+          user={this.user}
+        />
       </View>
     )
   }
