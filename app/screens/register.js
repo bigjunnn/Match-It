@@ -16,60 +16,85 @@ var width = Dimensions.get("window").width
 
 export default class Register extends React.Component {
   // Manage State
-  state = { username: "", email: "", password: "", confirm_password: "", profilepic: "", errorMessage: "" }
+  state = {
+    username: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    profilepic: "",
+    errorMessage: ""
+  }
 
   // Method to handle SignUp
   handleSignUp = () => {
-    let ref = firebase.database().ref('Usernames')
-    firebase.storage().ref('default/blank_profile.png').getDownloadURL().then(url => {
-      this.setState({profilepic: url})
-    })
+    let ref = firebase.database().ref("Usernames")
+    firebase
+      .storage()
+      .ref("default/blank_profile.png")
+      .getDownloadURL()
+      .then(url => {
+        this.setState({ profilepic: url })
+      })
 
     //check if username is taken before creating acc
     var name_exist = true
-    ref.child(this.state.username).once("value").then(snapshot => {
-      return snapshot.exists()
-    }).then((exist) => {
-      if (exist)
-      alert(`Username ${this.state.username} has been taken!`)
-      else {
-        // create user account
-        firebase
-        .auth()
-        .createUserWithEmailAndPassword(this.state.email, this.state.password)
-        .then(() => {
-          return firebase.auth().currentUser
-        }).then((user) => { //update user profile
-          ref.child(this.state.username).set(user.uid)
-          user.updateProfile({
-            displayName: this.state.username,
-            photoURL: this.state.profilepic
-          })
-        })
-        .catch(error => {
-          error = error.code
-          if (error == "auth/email-already-in-use") {
-            alert("This email has already been used")
-          } else if (error == "auth/invalid-email") {
-            alert("Please enter a valid email address")
-          }
-        })
-      }//
-    })
+    ref
+      .child(this.state.username)
+      .once("value")
+      .then(snapshot => {
+        return snapshot.exists()
+      })
+      .then(exist => {
+        if (exist) alert(`Username ${this.state.username} has been taken!`)
+        else {
+          // create user account
+          firebase
+            .auth()
+            .createUserWithEmailAndPassword(
+              this.state.email,
+              this.state.password
+            )
+            .then(() => {
+              return firebase.auth().currentUser
+            })
+            .then(user => {
+              //update user profile
+              ref.child(this.state.username).set(user.uid)
+              user.updateProfile({
+                displayName: this.state.username,
+                photoURL: this.state.profilepic
+              })
+            })
+            .catch(error => {
+              error = error.code
+              if (error == "auth/email-already-in-use") {
+                alert("This email has already been used")
+              } else if (error == "auth/invalid-email") {
+                alert("Please enter a valid email address")
+              }
+            })
+        } //
+      })
 
     // Checking whether the user is created
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        firebase.database().ref('Users').child(user.uid).set({ //store user info in db
-          email: user.email,
-          userid: user.uid,
-          username: this.state.username,
-          profilepic: this.state.profilepic,
-          createdAt: firebase.database.ServerValue.TIMESTAMP
-        }).then(() => {
-          alert("Your account has been created!")
-          this.props.navigation.navigate("Home")
-        })
+        firebase
+          .database()
+          .ref("Users")
+          .child(user.uid)
+          .set({
+            //store user info in db
+            email: user.email,
+            userid: user.uid,
+            username: this.state.username,
+            profilepic: this.state.profilepic,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+          })
+          .then(() => {
+            alert("Your account has been created!")
+            this.props.navigation.navigate("Home")
+          })
       }
     })
   }

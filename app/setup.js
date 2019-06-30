@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { 
-  createStackNavigator, 
+import {
+  createStackNavigator,
   createAppContainer,
-  createBottomTabNavigator 
+  createBottomTabNavigator
 } from 'react-navigation'
 import { Icon } from 'react-native-elements'
 
@@ -19,44 +19,42 @@ import inboxScreen from './screens/inbox'
 import servicerScreen from './screens/svc_profile'
 import reviewScreen from './screens/review'
 
-const BottomTabNavigator = createBottomTabNavigator({
-  Home: {
-    screen: homeScreen,
-    navigationOptions: {
-      tabBarLabel: 'Home',
-      tabBarIcon: ({ tintColor }) => (
-        <Icon name="home" color={tintColor} size={18} />
-      )
+const BottomTabNavigator = createBottomTabNavigator(
+  {
+    Home: {
+      screen: homeScreen,
+      navigationOptions: {
+        tabBarLabel: 'Home',
+        tabBarIcon: ({ tintColor }) =>
+          <Icon name='home' color={tintColor} size={18} />
+      }
+    },
+    Create: {
+      screen: createScreen,
+      navigationOptions: {
+        tabBarLabel: 'Create',
+        tabBarIcon: ({ tintColor }) =>
+          <Icon name='form' type='antdesign' color={tintColor} size={18} />
+      }
+    },
+    Inbox: {
+      screen: inboxScreen,
+      navigationOptions: {
+        tabBarLabel: 'Inbox',
+        tabBarIcon: ({ tintColor }) =>
+          <Icon name='mail' color={tintColor} size={18} />
+      }
+    },
+    Profile: {
+      screen: profileScreen,
+      navigationOptions: {
+        tabBarLabel: 'Profile',
+        tabBarIcon: ({ tintColor }) =>
+          <Icon name='idcard' type='antdesign' color={tintColor} size={18} />
+      }
     }
   },
-  Create: {
-    screen: createScreen,
-    navigationOptions: {
-      tabBarLabel: 'Create',
-      tabBarIcon: ({ tintColor }) => (
-        <Icon name="form" type="antdesign" color={tintColor} size={18} />
-      )
-    }
-  },
-  Inbox: {
-    screen: inboxScreen,
-    navigationOptions: {
-      tabBarLabel: 'Inbox',
-      tabBarIcon: ({ tintColor }) => (
-        <Icon name="mail" color={tintColor} size={18} />
-      )
-    }
-  },
-  Profile: {
-    screen: profileScreen,
-    navigationOptions: {
-      tabBarLabel: 'Profile',
-      tabBarIcon: ({ tintColor }) => (
-        <Icon name="idcard" type="antdesign" color={tintColor} size={18} />
-      )
-    }
-  }
-}, {
+  {
     tabBarOptions: {
       activeTintColor: 'red',
       inactiveTintColor: 'grey',
@@ -66,12 +64,14 @@ const BottomTabNavigator = createBottomTabNavigator({
         shadowOffset: { width: 5, height: 3 },
         shadowColor: 'black',
         shadowOpacity: 0.5,
-        elevation: 5,
-      },labelStyle: {
+        elevation: 5
+      },
+      labelStyle: {
         fontSize: 15
       }
     }
-  })
+  }
+)
 
 const AppStackNavigator = createStackNavigator(
   {

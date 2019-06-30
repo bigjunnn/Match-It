@@ -1,46 +1,54 @@
 import React from "react"
-import { 
-    StyleSheet, 
-    Image, 
-    Text, 
-    View,
-    Dimensions,
-    ScrollView,
-    FlatList
+import {
+  StyleSheet,
+  Image,
+  Text,
+  View,
+  Dimensions,
+  ScrollView,
+  FlatList
 } from "react-native"
 import { Title, Subtitle, H1 } from "native-base"
-import { Icon, ListItem, Card, Header, Button, Rating } from "react-native-elements";
+import {
+  Icon,
+  ListItem,
+  Card,
+  Header,
+  Button,
+  Rating
+} from "react-native-elements"
 import firebase from "firebase"
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class Details extends React.Component {
-    state = {
-      key: this.props.navigation.state.params.ref, //item id
-      details: "", 
-      servicer: "",
-      reviews: [],
-      disabled_btn: true
+  state = {
+    key: this.props.navigation.state.params.ref, //item id
+    details: "",
+    servicer: "",
+    reviews: [],
+    disabled_btn: true
+  }
+
+  keyExtractor = (item, index) => index.toString()
+
+  linkProfile() {
+    let user = firebase.auth().currentUser
+    if (this.state.servicer.userid === user.uid) {
+      this.props.navigation.navigate("Profile")
+    } else {
+      this.props.navigation.navigate("ServicerProfile", {
+        ref: this.state.servicer.userid
+      })
     }
+  }
 
-    keyExtractor = (item, index) => index.toString()
+  pendingService() {
+    let user = firebase.auth().currentUser
+    let book_ref = firebase.database().ref("Booking").child("Pending")
 
-    linkProfile() {
-      let user = firebase.auth().currentUser
-      if (this.state.servicer.userid === user.uid) {
-        this.props.navigation.navigate("Profile")
-      } else {
-        this.props.navigation.navigate("ServicerProfile", {
-	        ref: this.state.servicer.userid
-	      })
-      }
-    }
-
-    pendingService() {
-      let user = firebase.auth().currentUser
-      let book_ref = firebase.database().ref("Booking").child("Pending")
-
-      book_ref.push({
+    book_ref
+      .push({
         request_id: user.uid,
         request_name: user.displayName,
         servicer_id: this.state.servicer.userid,
@@ -49,51 +57,61 @@ export default class Details extends React.Component {
         itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
+      })
+      .then(() => {
         alert("Request to book service has been sent!")
       })
-    }
+  }
 
-    getReviews() {
-      firebase.database().ref('Review').child('Listing').child(this.state.key).once('value', snapshot => {
-        var items= []
+  getReviews() {
+    firebase
+      .database()
+      .ref("Review")
+      .child("Listing")
+      .child(this.state.key)
+      .once("value", snapshot => {
+        var items = []
         snapshot.forEach(snap => {
           items.push(snap.val())
         })
-        this.setState({reviews: items})
+        this.setState({ reviews: items })
       })
-    }
+  }
 
-    displayReviews() {
-      return (
+  displayReviews() {
+    return (
       <FlatList
         style={styles.fl}
-        data={ this.state.reviews }
+        data={this.state.reviews}
         keyExtractor={this.keyExtractor}
-        renderItem={({ item }) => (
-            <ListItem
-              title={
-                <View style={{flexDirection: 'row'}}>
-                <Text style={{fontSize: 17, fontWeight: 'bold'}}>{item.reviewer_name}</Text>
-                <View style={{flexDirection: 'row', marginLeft: 10}}>
-                <Rating
-                imageSize={15}
-                fractions={1}
-                startingValue={item.service_rate}
-                readonly
-                />
-                <Text style={{padding: 3, fontSize: 15}}>{item.service_rate}/5</Text>
+        renderItem={({ item }) =>
+          <ListItem
+            title={
+              <View style={{ flexDirection: "row" }}>
+                <Text style={{ fontSize: 17, fontWeight: "bold" }}>
+                  {item.reviewer_name}
+                </Text>
+                <View style={{ flexDirection: "row", marginLeft: 10 }}>
+                  <Rating
+                    imageSize={15}
+                    fractions={1}
+                    startingValue={item.service_rate}
+                    readonly
+                  />
+                  <Text style={{ padding: 3, fontSize: 15 }}>
+                    {item.service_rate}/5
+                  </Text>
                 </View>
-                </View>
-              }
-              subtitle={`${item.service_review}`}
-              style = {{width: width * 0.9}}
-            />
-        )} 
+              </View>
+            }
+            subtitle={`${item.service_review}`}
+            style={{ width: width * 0.9 }}
+          />}
       />
-    )}
+    )
+  }
 
-    /**
+  /**
     allowChat() {
       let user = firebase.auth().currentUser
       if (this.state.servicer.userid !== user.uid) {
@@ -114,53 +132,61 @@ export default class Details extends React.Component {
     }
     */
 
-    // Creates a reference under "Chats" in db, for both parties
-	  createChat(useruid, username, chateeuid, chateename) {
-	    let chatRef = firebase.database().ref("Chats").child(useruid)
-	    chatRef.push({ chateeID: chateeuid, chateeName: chateename })
-	    let newChatRef = firebase.database().ref("Chats").child(chateeuid)
-	    newChatRef.push({ chateeID: useruid, chateeName: username })
-	    this.props.navigation.navigate("Chat", {
-	      ref: chateeuid,
-	      ref_name: chateename
-	    })
-	  }
+  // Creates a reference under "Chats" in db, for both parties
+  createChat(useruid, username, chateeuid, chateename) {
+    let chatRef = firebase.database().ref("Chats").child(useruid)
+    chatRef.push({ chateeID: chateeuid, chateeName: chateename })
+    let newChatRef = firebase.database().ref("Chats").child(chateeuid)
+    newChatRef.push({ chateeID: useruid, chateeName: username })
+    this.props.navigation.navigate("Chat", {
+      ref: chateeuid,
+      ref_name: chateename
+    })
+  }
 
-    componentDidMount() {
-      var key = this.props.navigation.state.params.ref
-      let data_ref = firebase.database().ref('Listing').child(key)
-      this.setState({key: key})
+  componentDidMount() {
+    var key = this.props.navigation.state.params.ref
+    let data_ref = firebase.database().ref("Listing").child(key)
+    this.setState({ key: key })
 
-      data_ref.once("value").then(snapshot => { //listing details
+    data_ref
+      .once("value")
+      .then(snapshot => {
+        //listing details
         this.setState({ details: snapshot.val() })
-        
-      }).then(() => { //servicer details
+      })
+      .then(() => {
+        //servicer details
         let user_ref = firebase
           .database()
-          .ref('Users')
+          .ref("Users")
           .child(this.state.details.userid)
 
         let user = firebase.auth().currentUser
 
-        user_ref.once("value").then(snapshot => {
-          this.setState({ servicer: snapshot.val() })
+        user_ref
+          .once("value")
+          .then(snapshot => {
+            this.setState({ servicer: snapshot.val() })
 
-          if (this.state.servicer.userid !== user.uid) {
-            this.setState({ disabled_btn: false }) //allow booking of service
-          }
-        }).then(() => { //reviews on listing
-          this.getReviews()
-        })
+            if (this.state.servicer.userid !== user.uid) {
+              this.setState({ disabled_btn: false }) //allow booking of service
+            }
+          })
+          .then(() => {
+            //reviews on listing
+            this.getReviews()
+          })
       })
-    }
+  }
 
-    render() {
-      return (
-        <View>
-          <Header 
+  render() {
+    return (
+      <View>
+        <Header
           centerComponent={{
-            text: `${this.state.details.title}`, 
-            style:{ fontSize: 20, fontWeight: 'bold'}
+            text: `${this.state.details.title}`,
+            style: { fontSize: 20, fontWeight: "bold" }
           }}
           rightComponent={
             <Icon
@@ -178,20 +204,20 @@ export default class Details extends React.Component {
               }}
             />
           }
-          backgroundColor='#e6ebed'
-          />
-          
-        <ScrollView style={{height: height*0.8}}>
+          backgroundColor="#e6ebed"
+        />
+
+        <ScrollView style={{ height: height * 0.8 }}>
           <View style={styles.container}>
             <Card>
-              <H1 style={{ padding:10, fontWeight:'bold' }}>
+              <H1 style={{ padding: 10, fontWeight: "bold" }}>
                 {this.state.details.title}
               </H1>
 
               <Image //item's image
-                source={{ uri: this.state.details.photo}}
-                resizeMode= "cover"
-                style={{ height: height * 0.3, width: width * 0.9}}
+                source={{ uri: this.state.details.photo }}
+                resizeMode="cover"
+                style={{ height: height * 0.3, width: width * 0.9 }}
               />
 
               <ListItem //servicer dp and username
@@ -215,11 +241,10 @@ export default class Details extends React.Component {
 
             {/** show reviews */}
             {this.displayReviews()}
-
           </View>
         </ScrollView>
 
-          <View style={styles.bottomBtn}>
+        <View style={styles.bottomBtn}>
           {/**
             <Button
             containerStyle={{width: width * 0.1}}
@@ -232,15 +257,15 @@ export default class Details extends React.Component {
           */}
 
           <Button
-            containerStyle={{ width: width * 0.80}}
+            containerStyle={{ width: width * 0.8 }}
             title="Book Service"
             disabled={this.state.disabled_btn}
             onPress={() => this.pendingService()}
           />
-          </View>
         </View>
-        )
-      }
+      </View>
+    )
+  }
 }
 
 const styles = StyleSheet.create({
