@@ -167,7 +167,7 @@ export default class Profile extends React.Component {
             <View>
               <Avatar
                 size="xlarge"
-                source={{ uri: user.photoURL }}
+                source={{ uri: user.profilepic}}
                 containerStyle={{ marginTop: 20 }}
               />
             </View>

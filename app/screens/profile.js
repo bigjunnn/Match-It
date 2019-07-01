@@ -184,7 +184,8 @@ export default class Profile extends React.Component {
                 style={{
                   flexDirection: "row",
                   alignContent: "center",
-                  justifyContent: "center"
+                  justifyContent: "center",
+                  width: width * 0.5
                 }}
               >
                 <Rating

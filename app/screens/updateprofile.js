@@ -22,28 +22,33 @@ export default class UpdateProfile extends React.Component {
     user: firebase.auth().currentUser,
     username: firebase.auth().currentUser.displayName, 
     avatar: firebase.auth().currentUser.photoURL,
-    description: "" 
+    description: ""
   }
   
   verifyUsername() {
     //detected changes, proceed to verify
     if (this.state.username !== this.state.user.displayName) { 
-    return firebase
+    firebase
       .database()
       .ref('Usernames')
       .child(this.state.username)
-      .exist()
+      .once('value', snapshot => {
+        return snapshot.exists()
+      })
+      .then(exist => {
+        if (exist) {
+          this.verify()
+        } else {
+          alert('Username is taken! Try again!')
+        }
+      })
     } else {
-      return true
+      this.verify()
     }
   }
 
   verify() {
-    if (this.verifyUsername() === true) {
-      this.uploadImage(this.state.avatar)
-    } else {
-      alert('Username is taken! Try again!')
-    }
+    this.uploadImage(this.state.avatar)
   }
 
   updateUsername = () => {
@@ -75,25 +80,20 @@ export default class UpdateProfile extends React.Component {
 
     const imageRef = firebase.storage().ref(userf.uid).child("dp.jpg")
     const mime = "image/jpg"
-    alert("here")
 
     fs
       .readFile(uri, "base64")
       .then(data => {
-        alert('here1')
         return Blob.build(data, { type: `${mime};BASE64` })
       })
       .then(blob => {
-        alert('here2')
         uploadBlob = blob
         return imageRef.put(blob, { contentType: mime })
       })
       .then(() => {
-        alert('here3')
         return imageRef.getDownloadURL()
       })
       .then(url => {
-        alert('here4')
         this.setState({ avatar: url }) 
       }).then(() => {
         this.updateProfile()
@@ -124,13 +124,9 @@ export default class UpdateProfile extends React.Component {
   }
 
   updateProfile = () => {
-    if (this.verifyUsername() === true) {
-      this.updateDatabase()
-      this.updateUsername()
-      this.updateAvatar()
-    } else {
-      alert("Username is taken. Try again")
-    }
+    this.updateDatabase()
+    this.updateUsername()
+    this.updateAvatar()
   }
 
   componentDidMount() {
