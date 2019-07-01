@@ -21,6 +21,7 @@ export default class Profile extends React.Component {
     listings: [],
     activeIndex: 0,
     user_info: "",
+    description: "",
     review_stars: 0.0,
     review_count: 0,
     reviews: []
@@ -52,6 +53,10 @@ export default class Profile extends React.Component {
     let info = firebase.database().ref("Users/" + user.uid)
     info.once("value", snapshot => {
       this.setState({ user_info: snapshot.val() })
+
+      if (snapshot.val().description !== undefined) {
+        this.setState({description: snapshot.val().description})
+      }
 
       if (snapshot.val().review !== undefined) {
         let total_stars = snapshot.val().review.total_stars
@@ -174,7 +179,7 @@ export default class Profile extends React.Component {
               <Text style={{ fontSize: 30, padding: 5, fontWeight: "bold" }}>
                 {user.displayName}
               </Text>
-              <Subtitle>User since //</Subtitle>
+              <Subtitle>  </Subtitle>
               <View
                 style={{
                   flexDirection: "row",
@@ -192,7 +197,7 @@ export default class Profile extends React.Component {
                   {this.state.review_stars} ({this.state.review_count})
                 </Text>
               </View>
-              <Text style={{ padding: 10 }}>// description here</Text>
+              <Text style={{ padding: 10 }}>{this.state.description}</Text>
             </View>
           </View>
 

@@ -2,31 +2,60 @@ import React from "react"
 import { StyleSheet, View, Dimensions, Linking } from "react-native"
 import {
   Form,
-  Title,
   Item,
   Input,
   Text,
   Button,
-  Content,
   Label
 } from "native-base"
 import firebase from "firebase"
+import { Header, Avatar } from "react-native-elements"
 import ImagePicker from "react-native-image-crop-picker"
 import RNFetchBlob from "rn-fetch-blob"
 
 var width = Dimensions.get("window").width
-
-export default class Register extends React.Component {
+var height = Dimensions.get("window").height
+export default class UpdateProfile extends React.Component {
+  
   // Manage State
-  state = { username: "", avatar: "" }
+  state = { 
+    user: firebase.auth().currentUser,
+    username: firebase.auth().currentUser.displayName, 
+    avatar: firebase.auth().currentUser.photoURL,
+    description: "" 
+  }
+  
+  verifyUsername() {
+    //detected changes, proceed to verify
+    if (this.state.username !== this.state.user.displayName) { 
+    return firebase
+      .database()
+      .ref('Usernames')
+      .child(this.state.username)
+      .exist()
+    } else {
+      return true
+    }
+  }
+
+  verify() {
+    if (this.verifyUsername() === true) {
+      this.uploadImage(this.state.avatar)
+    } else {
+      alert('Username is taken! Try again!')
+    }
+  }
 
   updateUsername = () => {
     var userf = firebase.auth().currentUser
+    firebase.database().ref('Usernames').child(userf.displayName).remove()
+    firebase.database().ref('Usernames').child(this.state.username).set(userf.uid)
     userf.updateProfile({
       displayName: this.state.username
+    }).then(() => {
+      alert("Your profile has been updated!")
+      this.props.navigation.navigate("Profile")
     })
-
-    alert("Your display name has been changed!")
   }
 
   updateAvatar = () => {
@@ -34,10 +63,9 @@ export default class Register extends React.Component {
     userf.updateProfile({
       photoURL: this.state.avatar
     })
-    alert("Your profile picture has been changed!")
   }
 
-  uploadImage = uri => {
+  uploadImage(uri) {
     // Prepare Blob support
     const Blob = RNFetchBlob.polyfill.Blob
     const fs = RNFetchBlob.fs
@@ -47,23 +75,28 @@ export default class Register extends React.Component {
 
     const imageRef = firebase.storage().ref(userf.uid).child("dp.jpg")
     const mime = "image/jpg"
+    alert("here")
 
     fs
       .readFile(uri, "base64")
       .then(data => {
+        alert('here1')
         return Blob.build(data, { type: `${mime};BASE64` })
       })
       .then(blob => {
+        alert('here2')
         uploadBlob = blob
         return imageRef.put(blob, { contentType: mime })
       })
       .then(() => {
-        alert("Upload successful!")
+        alert('here3')
         return imageRef.getDownloadURL()
       })
       .then(url => {
-        this.setState({ avatar: url })
-        this.updateAvatar()
+        alert('here4')
+        this.setState({ avatar: url }) 
+      }).then(() => {
+        this.updateProfile()
       })
   }
 
@@ -75,7 +108,39 @@ export default class Register extends React.Component {
       mediaType: "photo"
     }).then(image => {
       const imagePath = image.path
-      this.uploadImage(imagePath)
+      this.setState({avatar: imagePath})
+    })
+  }
+
+  updateDatabase() {
+    firebase
+    .database()
+    .ref('Users/' + this.state.user.uid)
+    .update({
+      username: this.state.username,
+      profilepic: this.state.avatar,
+      description: this.state.description
+    })
+  }
+
+  updateProfile = () => {
+    if (this.verifyUsername() === true) {
+      this.updateDatabase()
+      this.updateUsername()
+      this.updateAvatar()
+    } else {
+      alert("Username is taken. Try again")
+    }
+  }
+
+  componentDidMount() {
+    firebase
+    .database()
+    .ref('Users/' + this.state.user.uid)
+    .once("value", snapshot => {
+      if (snapshot.val().description !== undefined) {
+        this.setState({ description: snapshot.val().description})
+      }
     })
   }
 
@@ -83,24 +148,51 @@ export default class Register extends React.Component {
     let user = firebase.auth().currentUser
     return (
       <View style={styles.container}>
-        <Title
-          style={{
-            fontFamily: "Lobster-Regular",
-            fontSize: 60,
-            color: "black",
-            marginTop: 30
+        <Header
+          backgroundColor="white"
+          centerComponent={{
+            text: "Update Profile",
+            style: { fontSize: 20, fontWeight: "bold" }
           }}
-        >
-          Update Profile
-        </Title>
-
+        />
+        
         <Form style={({ color: "black" }, styles.input)}>
-          <Item floatingLabel>
-            <Label>Enter your new name</Label>
+          <Item stackedLabel>
+            <Label>Username</Label>
             <Input
               autoCapitalize="none"
+              maxLength={12}
               onChangeText={username => this.setState({ username })}
               value={this.state.username}
+              style={{ width: width * 0.8, height: height * 0.1}}
+            />
+          </Item>
+
+          <Avatar 
+          size={width * 0.5}
+          source={{ uri: this.state.avatar }}
+          containerStyle={{padding: 10}}
+          showEditButton
+          onEditPress={() => this.chooseImage()}
+          />
+
+          <Item stackedLabel 
+            style={{
+            height: height * 0.2,
+            alignContent: "center",
+            alignItems: "center"
+          }}>
+            <Label>Description</Label>
+            <Input
+              autoCapitalize="none"
+              maxLength={100}
+              multiline={true}
+              onContentSizeChange={e => {
+                numOfLinesCompany = e.nativeEvent.contentSize.height / 18
+              }}
+              onChangeText={description => this.setState({ description })}
+              value={this.state.description}
+              style={{ width: width * 0.8, height: height * 0.4}}
             />
           </Item>
         </Form>
@@ -109,13 +201,9 @@ export default class Register extends React.Component {
           block
           danger
           style={styles.submit}
-          onPress={this.updateUsername}
+          onPress={() => this.verify()}
         >
-          <Text>Change Username</Text>
-        </Button>
-
-        <Button block danger style={styles.submit} onPress={this.chooseImage}>
-          <Text>Change Profile Picture</Text>
+          <Text>Update</Text>
         </Button>
       </View>
     )
@@ -125,7 +213,7 @@ export default class Register extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff6f5"
+    // backgroundColor: "#fff6f5"
   },
   input: {
     marginTop: 30,
@@ -154,5 +242,15 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     marginLeft: 90,
     marginRight: 90
+  },
+  description_box: {
+    padding: 10,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 1,
+    borderTopWidth: 1
   }
 })

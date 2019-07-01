@@ -21,6 +21,7 @@ export default class Profile extends React.Component {
     activeIndex: 0,
     servicerid: this.props.navigation.state.params.ref,
     servicer: "",
+    description: "",
     review_stars: 0.0,
     review_count: 0,
     reviews: []
@@ -52,6 +53,10 @@ export default class Profile extends React.Component {
     let user_ref = firebase.database().ref("Users").child(servicer)
     user_ref.once("value").then(snapshot => {
       this.setState({ servicer: snapshot.val() })
+
+      if (snapshot.val().description !== undefined) {
+        this.setState({description: snapshot.val().description})
+      }
 
       if (snapshot.val().review !== undefined) {
         let total_stars = snapshot.val().review.total_stars
@@ -167,11 +172,11 @@ export default class Profile extends React.Component {
               />
             </View>
 
-            <View style={{ flexDirection: "column", justifyContent: "center" }}>
+            <View style={{ flexDirection: "column", justifyContent: "center"}}>
               <Text style={{ fontSize: 30, padding: 5, fontWeight: "bold" }}>
                 {this.state.servicer.username}
               </Text>
-              <Subtitle>User since //</Subtitle>
+              <Subtitle>  </Subtitle>
               <View
                 style={{
                   flexDirection: "row",
@@ -189,7 +194,7 @@ export default class Profile extends React.Component {
                   {this.state.review_stars} ({this.state.review_count})
                 </Text>
               </View>
-              <Text style={{ padding: 10 }}>// description here</Text>
+              <Text style={{ padding: 10 }}>{this.state.description}</Text>
             </View>
           </View>
 
