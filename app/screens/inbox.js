@@ -143,15 +143,27 @@ export default class ChatLog extends React.Component {
           data={this.state.chats}
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
-            <TouchableHighlight
-              style={styles.chats}
-              underlayColor="#fff"
-              onPress={() => this.openMessages(item.chateeName)}
-            >
-              <Text style={styles.chatText}>
-                Chat with {item.chateeName}{" "}
-              </Text>
-            </TouchableHighlight>}
+            <ListItem
+              style={{ width: width * 0.9 }}
+              leftAvatar={{
+                size: "medium",
+                rounded: false,
+                source: { uri: item.itempic }
+              }}
+              title={`${item.itemtitle}`}
+              subtitle={`Chat with ${item.chateeName}`}
+              rightIcon={
+                <View style={{ flexDirection: "row", width: width * 0.15 }}>
+                  <Icon //PM requester
+                    name="message"
+                    size={20}
+                    containerStyle={{ padding: 5 }}
+                    onPress={() =>
+                      this.openMessages(item.chateeName, item.itemID)}
+                  />
+                </View>
+              }
+            />}
         />
       )
     }
@@ -234,11 +246,15 @@ export default class ChatLog extends React.Component {
   }
 
   // Opens a specific chat, based on chateeName
-  openMessages(name) {
+  openMessages(name, itemID) {
     let user_ref = firebase.database().ref("Usernames").child(name)
     user_ref.on("value", snapshot => {
       var chateeID = snapshot.val()
-      this.props.navigation.navigate("Chat", { ref: chateeID, ref_name: name })
+      this.props.navigation.navigate("Chat", {
+        ref: chateeID,
+        ref_name: name,
+        ref_itemID: itemID
+      })
     })
   }
 
@@ -250,9 +266,15 @@ export default class ChatLog extends React.Component {
       snapshot.forEach(child => {
         var chateeID = child.val().chateeID
         var chateeName = child.val().chateeName
+        var itemID = child.val().itemID
+        var itempic = child.val().itemPhoto
+        var itemtitle = child.val().itemtitle
         chatArr.push({
           chateeID: chateeID,
-          chateeName: chateeName
+          chateeName: chateeName,
+          itemID: itemID,
+          itempic: itempic,
+          itemtitle: itemtitle
         })
       })
       this.setState({ chats: chatArr })

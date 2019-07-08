@@ -13,7 +13,8 @@ export default class Chat extends React.Component {
   state = {
     messages: [],
     partyid: this.props.navigation.state.params.ref,
-    partyname: this.props.navigation.state.params.ref_name
+    partyname: this.props.navigation.state.params.ref_name,
+    itemID: this.props.navigation.state.params.ref_itemID
   }
 
   // Getters
@@ -27,22 +28,27 @@ export default class Chat extends React.Component {
     return this.state.partyid
   }
 
+  get itemID() {
+    return this.state.itemID
+  }
+
   get ref() {
     return firebase
       .database()
       .ref("Messages")
-      .child(this.chatID(this.uid, this.chateeUID))
+      .child(this.chatID(this.uid, this.chateeUID, this.itemID))
   }
 
   get timestamp() {
     return firebase.database.ServerValue.TIMESTAMP
   }
 
-  // Generate a unique code for 2 person chat, using chaterID & chateeID
-  chatID = (id1, id2) => {
+  // Generate a unique code for 2 person chat, using chaterID, chateeID & itemID
+  chatID = (id1, id2, itemID) => {
     const chatIDpre = []
     chatIDpre.push(id1)
     chatIDpre.push(id2)
+    chatIDpre.push(itemID)
     chatIDpre.sort()
     return chatIDpre.join("_")
   }

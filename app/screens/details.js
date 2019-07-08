@@ -133,14 +133,35 @@ export default class Details extends React.Component {
     */
 
   // Creates a reference under "Chats" in db, for both parties
-  createChat(useruid, username, chateeuid, chateename) {
+  createChat(
+    useruid,
+    username,
+    chateeuid,
+    chateename,
+    itemid,
+    itemphoto,
+    itemtitle
+  ) {
     let chatRef = firebase.database().ref("Chats").child(useruid)
-    chatRef.push({ chateeID: chateeuid, chateeName: chateename })
+    chatRef.push({
+      chateeID: chateeuid,
+      chateeName: chateename,
+      itemID: itemid,
+      itemtitle: itemtitle,
+      itemPhoto: itemphoto
+    })
     let newChatRef = firebase.database().ref("Chats").child(chateeuid)
-    newChatRef.push({ chateeID: useruid, chateeName: username })
+    newChatRef.push({
+      chateeID: useruid,
+      chateeName: username,
+      itemID: itemid,
+      itemPhoto: itemphoto,
+      itemtitle: itemtitle
+    })
     this.props.navigation.navigate("Chat", {
       ref: chateeuid,
-      ref_name: chateename
+      ref_name: chateename,
+      ref_itemID: itemid
     })
   }
 
@@ -199,7 +220,10 @@ export default class Details extends React.Component {
                   useruid,
                   username,
                   this.state.servicer.userid,
-                  this.state.servicer.username
+                  this.state.servicer.username,
+                  this.state.key,
+                  this.state.details.photo,
+                  this.state.details.title
                 )
               }}
             />
