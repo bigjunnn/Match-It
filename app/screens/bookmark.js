@@ -16,30 +16,30 @@ var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class Home extends React.Component {
   // Define current state
-  state = { listing: [], bookmarks: [] }
-
-  handleSignOut = () => {
-    firebase.auth().signOut().then(this.props.navigation.navigate("Login"))
-  }
+  state = { bookmarks: [] }
 
   componentDidMount() {
-    let listing_ref = firebase.database().ref("Listing")
     let user = firebase.auth().currentUser
     let bookmark_ref = firebase.database().ref("Bookmarks").child(user.uid)
 
-    // get user's listings from firebase db in array form
-    listing_ref.once("value").then(snapshot => {
+    // get user's bookmarks from firebase db in array form
+    bookmark_ref.once("value").then(snapshot => {
       var items = []
       snapshot.forEach(child => {
         items.push({
-          key: child.key,
-          title: child.val().title,
+          key: child.val().itemid,
+          itemname: child.val().itemname,
+          itempic: child.val().itempic,
+          request_id: child.val().request_id,
+          request_name: child.val().request_name,
+          servicer_id: child.val().servicer_id,
+          servicer_name: child.val().servicer_name,
+          createdAt: child.val().createdAt,
           price: child.val().price,
-          price_type: child.val().price_type,
-          photo: child.val().photo
+          price_type: child.val().price_type
         })
       })
-      this.setState({ listings: items })
+      this.setState({ bookmarks: items })
     })
   }
 
@@ -49,36 +49,19 @@ export default class Home extends React.Component {
     return (
       <View>
         <Header
-          leftComponent={
-            <Icon
-              name="sc-telegram"
-              type="evilicon"
-              onPress={this.handleSignOut}
-            />
-          }
           centerComponent={{
-            text: "Matchit",
+            text: "Bookmarks",
             style: { fontSize: 30, fontFamily: "Lobster-Regular" }
           }}
-          rightComponent={
-            <Icon
-              name="bookmark"
-              onPress={() => this.props.navigation.navigate("Bookmark")}
-            />
-          }
+          // rightComponent={<Icon name='search' />}
           backgroundColor="#f7ccc3"
         />
 
         <ScrollView>
           <View style={styles.container}>
-            <Text>
-              Hi {user && user.email}!
-            </Text>
-            <Title>View All Listing</Title>
-
             <FlatList
               style={styles.fl}
-              data={this.state.listings}
+              data={this.state.bookmarks}
               keyExtractor={this.keyExtractor}
               renderItem={({ item }) =>
                 <TouchableOpacity
@@ -91,9 +74,9 @@ export default class Home extends React.Component {
                     leftAvatar={{
                       size: "large",
                       rounded: false,
-                      source: { uri: item.photo }
+                      source: { uri: item.itempic }
                     }}
-                    title={item.title}
+                    title={item.itemname}
                     subtitle={`SGD ${item.price} / ${item.price_type}`}
                     style={{ width: width * 0.9 }}
                   />

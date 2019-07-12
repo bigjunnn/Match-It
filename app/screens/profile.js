@@ -24,7 +24,8 @@ export default class Profile extends React.Component {
     description: "",
     review_stars: 0.0,
     review_count: 0,
-    reviews: []
+    reviews: [],
+    skills: []
   }
 
   keyExtractor = (item, index) => index.toString()
@@ -55,7 +56,7 @@ export default class Profile extends React.Component {
       this.setState({ user_info: snapshot.val() })
 
       if (snapshot.val().description !== undefined) {
-        this.setState({description: snapshot.val().description})
+        this.setState({ description: snapshot.val().description })
       }
 
       if (snapshot.val().review !== undefined) {
@@ -65,6 +66,19 @@ export default class Profile extends React.Component {
         this.setState({ review_stars: val, review_count: total_count })
         this.getReviews()
       }
+    })
+
+    // get user's skills
+    let skill_ref = firebase.database().ref("Skills").child(user.uid)
+    skill_ref.once("value").then(snapshot => {
+      var items = []
+      snapshot.forEach(child => {
+        items.push({
+          category: child.val().category,
+          skillName: child.val().skillName
+        })
+      })
+      this.setState({ skills: items })
     })
   }
 
@@ -146,7 +160,33 @@ export default class Profile extends React.Component {
     } else if (this.state.activeIndex == 2) {
       //SKILLS
       return (
-        <Text style={{ marginTop: 20, fontSize: 30 }}>Coming Soon ...</Text>
+        <View style={styles.skillsContainer}>
+          <Button
+            title="Add a skill"
+            type="solid"
+            onPress={() => this.props.navigation.navigate("Skill")}
+          />
+
+          <FlatList
+            style={styles.fl}
+            data={this.state.skills}
+            keyExtractor={this.keyExtractor}
+            renderItem={({ item }) =>
+              <ListItem
+                leftAvatar={{
+                  rounded: true,
+                  size: "medium",
+                  overlayContainerStyle: { backgroundColor: "orange" },
+                  icon: {
+                    name: item.category,
+                    type: "font-awesome"
+                  }
+                }}
+                title={item.skillName}
+                style={{ width: width * 0.9 }}
+              />}
+          />
+        </View>
       )
     }
   }
@@ -176,10 +216,10 @@ export default class Profile extends React.Component {
             </View>
 
             <View style={{ flexDirection: "column", justifyContent: "center" }}>
-              <Text style={{ fontSize: 30, padding: 5, fontWeight: "bold" }}>
+              <Text style={{ fontSize: 30, padding: 20, fontWeight: "bold" }}>
                 {user.displayName}
               </Text>
-              <Subtitle>  </Subtitle>
+              <Subtitle> </Subtitle>
               <View
                 style={{
                   flexDirection: "row",
@@ -198,7 +238,9 @@ export default class Profile extends React.Component {
                   {this.state.review_stars} ({this.state.review_count})
                 </Text>
               </View>
-              <Text style={{ padding: 10 }}>{this.state.description}</Text>
+              <Text style={{ padding: 10 }}>
+                {this.state.description}
+              </Text>
             </View>
           </View>
 
@@ -259,5 +301,9 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     borderBottomWidth: 1,
     marginTop: 30
+  },
+  skillsContainer: {
+    marginTop: 20,
+    height: height * 1
   }
 })

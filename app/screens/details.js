@@ -63,6 +63,30 @@ export default class Details extends React.Component {
       })
   }
 
+  addToBookMark() {
+    let user = firebase.auth().currentUser
+    // Creates a new bookmark for user, if it doesn't already exist
+    let ref = firebase.database().ref("Bookmarks").child(user.uid)
+
+    // Pushes the listing into bookmark page
+    ref
+      .push({
+        request_id: user.uid,
+        request_name: user.displayName,
+        servicer_id: this.state.servicer.userid,
+        servicer_name: this.state.servicer.username,
+        itempic: this.state.details.photo,
+        itemid: this.state.key,
+        itemname: this.state.details.title,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        price: this.state.details.price,
+        price_type: this.state.details.price_type
+      })
+      .then(() => {
+        alert("Listing has been bookmarked!")
+      })
+  }
+
   getReviews() {
     firebase
       .database()
@@ -269,22 +293,21 @@ export default class Details extends React.Component {
         </ScrollView>
 
         <View style={styles.bottomBtn}>
-          {/**
-            <Button
-            containerStyle={{width: width * 0.1}}
-            type="clear"
-            icon={
-            <Icon
-              name="bookmark"
-            />}
-            />
-          */}
-
           <Button
-            containerStyle={{ width: width * 0.8 }}
+            containerStyle={{
+              paddingLeft: 25,
+              width: width * 0.8
+            }}
             title="Book Service"
             disabled={this.state.disabled_btn}
             onPress={() => this.pendingService()}
+          />
+
+          <Button
+            containerStyle={{ width: width * 0.2 }}
+            type="clear"
+            icon={<Icon name="bookmark" />}
+            onPress={() => this.addToBookMark()}
           />
         </View>
       </View>

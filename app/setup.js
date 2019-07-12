@@ -18,6 +18,9 @@ import chatScreen from './screens/chat'
 import inboxScreen from './screens/inbox'
 import servicerScreen from './screens/svc_profile'
 import reviewScreen from './screens/review'
+import bookmarkScreen from './screens/bookmark'
+import skillScreen from './screens/skills'
+import adminScreen from './screens/admin'
 
 const BottomTabNavigator = createBottomTabNavigator(
   {
@@ -113,6 +116,12 @@ const AppStackNavigator = createStackNavigator(
         header: null
       })
     },
+    Bookmark: {
+      screen: bookmarkScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
     ServicerProfile: {
       screen: servicerScreen,
       navigationOptions: () => ({
@@ -126,6 +135,18 @@ const AppStackNavigator = createStackNavigator(
         headerStyle: {
           backgroundColor: 'white'
         }
+      })
+    },
+    Skill: {
+      screen: skillScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Admin: {
+      screen: adminScreen,
+      navigationOptions: () => ({
+        header: null
       })
     }
   },
