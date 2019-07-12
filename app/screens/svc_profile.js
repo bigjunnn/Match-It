@@ -30,42 +30,47 @@ export default class Profile extends React.Component {
   keyExtractor = (item, index) => index.toString()
 
   componentDidMount() {
+    this.renderListings()
+    this.renderServicerDetail()
+  }
+
+  renderListings() {
+    window = undefined
     let servicer = this.state.servicerid
-    let listing_ref = firebase.database().ref("Listing")
-
-    // get servicer's listings from firebase db in array form
-    var query = listing_ref.orderByChild("userid").equalTo(servicer)
-    query.once("value").then(snapshot => {
-      var items = []
-      snapshot.forEach(child => {
-        items.push({
-          key: child.key,
-          title: child.val().title,
-          price: child.val().price,
-          price_type: child.val().price_type,
-          photo: child.val().photo
+    firebase.firestore().collection('Listing').where('userid', '==', servicer)
+      .get().then(snapshot => {
+        var items = []
+        snapshot.forEach(doc => {
+          items.push({
+            key: doc.data().id,
+            title: doc.data().title,
+            price: doc.data().package[0].price,
+            price_type: doc.data().package[0].price_type,
+            photo: doc.data().photo[0]
+          })
         })
+        this.setState({ listings: items })
       })
-      this.setState({ listings: items })
-    })
+  }
 
-    // get servicer's info firebase db
-    let user_ref = firebase.database().ref("Users").child(servicer)
-    user_ref.once("value").then(snapshot => {
-      this.setState({ servicer: snapshot.val() })
+  renderServicerDetail() {
+    let servicer = this.state.servicerid
+    firebase.database().ref("Users/" + servicer).once("value")
+      .then(snapshot => {
+        this.setState({servicer: snapshot.val()})
 
-      if (snapshot.val().description !== undefined) {
-        this.setState({description: snapshot.val().description})
-      }
-
-      if (snapshot.val().review !== undefined) {
-        let total_stars = snapshot.val().review.total_stars
-        let total_count = snapshot.val().review.count
-        var val = total_stars / total_count
-        this.setState({ review_stars: val, review_count: total_count })
-        this.getReviews()
-      }
-    })
+        if (snapshot.val().description !== undefined) {
+          this.setState({description: snapshot.val().description})
+        }
+  
+        if (snapshot.val().review !== undefined) {
+          let total_stars = snapshot.val().review.total_stars
+          let total_count = snapshot.val().review.count
+          var val = total_stars / total_count
+          this.setState({ review_stars: val, review_count: total_count })
+          this.getReviews()
+        }
+      })
   }
 
   getReviews() {

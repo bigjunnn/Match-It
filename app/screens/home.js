@@ -16,31 +16,32 @@ var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class Home extends React.Component {
   // Define current state
-  state = { listing: [], bookmarks: [] }
+  state = { listing: [] }
+
+  keyExtractor = (item, index) => index.toString()
 
   handleSignOut = () => {
     firebase.auth().signOut().then(this.props.navigation.navigate("Login"))
   }
 
   componentDidMount() {
-    let listing_ref = firebase.database().ref("Listing")
-    let user = firebase.auth().currentUser
-    let bookmark_ref = firebase.database().ref("Bookmarks").child(user.uid)
+    this.renderListings()
+  }
 
-    // get user's listings from firebase db in array form
-    listing_ref.once("value").then(snapshot => {
-      var items = []
-      snapshot.forEach(child => {
-        items.push({
-          key: child.key,
-          title: child.val().title,
-          price: child.val().price,
-          price_type: child.val().price_type,
-          photo: child.val().photo
+  renderListings() {
+    //get all listings from db in array form
+    window = undefined
+    firebase.firestore().collection("Listing").get()
+      .then(snapshot => {
+        var items = []
+        snapshot.forEach(doc => {
+          items.push(doc.data())
         })
+        this.setState({ listings: items})
       })
-      this.setState({ listings: items })
-    })
+      .catch(err => {
+        console.log('Error getting documents', err)
+      })
   }
 
   render() {
@@ -84,17 +85,17 @@ export default class Home extends React.Component {
                 <TouchableOpacity
                   onPress={() =>
                     this.props.navigation.navigate("Details", {
-                      ref: item.key
+                      ref: item.id
                     })}
                 >
                   <ListItem
                     leftAvatar={{
                       size: "large",
                       rounded: false,
-                      source: { uri: item.photo }
+                      source: { uri: item.photo[0] }
                     }}
                     title={item.title}
-                    subtitle={`SGD ${item.price} / ${item.price_type}`}
+                    subtitle={`From SGD ${item.package[0].price} / ${item.package[0].price_type}`}
                     style={{ width: width * 0.9 }}
                   />
                 </TouchableOpacity>}

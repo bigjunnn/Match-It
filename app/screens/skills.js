@@ -147,10 +147,10 @@ export default class UpdateProfile extends React.Component {
             />
           </Item>
 
-          <Item stackedLabel>
+          <Item stackedLabel style={{marginBottom: 20, height: height * 0.2}}>
             <Label>Skill Category</Label>
             <Picker
-              style={styles.input} // NOTE: Apparently this style field must be present for picker to work
+              style={styles.picker} // NOTE: Apparently this style field must be present for picker to work
               selectedValue={this.state.category}
               onValueChange={(itemValue, itemIndex) =>
                 this.setState({ category: itemValue })}
@@ -227,5 +227,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 1,
     borderTopWidth: 1
+  },
+  picker: {
+    width: width * 0.8,
+    height: height * 0.1,
+    paddingLeft: 30
   }
 })

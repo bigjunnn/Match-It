@@ -31,44 +31,52 @@ export default class Profile extends React.Component {
   keyExtractor = (item, index) => index.toString()
 
   componentDidMount() {
+    this.renderListings()
+    this.renderProfileDetail()
+    this.renderSkills()
+  }
+
+  renderListings() {
+    window = undefined
     let user = firebase.auth().currentUser
-    let listing_ref = firebase.database().ref("Listing")
-
-    // get user's listings from firebase db in array form
-    var query = listing_ref.orderByChild("userid").equalTo(user.uid)
-    query.once("value").then(snapshot => {
-      var items = []
-      snapshot.forEach(child => {
-        items.push({
-          key: child.key,
-          title: child.val().title,
-          price: child.val().price,
-          price_type: child.val().price_type,
-          photo: child.val().photo
+    firebase.firestore().collection('Listing').where('userid', '==', user.uid)
+      .get().then(snapshot => {
+        var items = []
+        snapshot.forEach(doc => {
+          items.push({
+            key: doc.data().id,
+            title: doc.data().title,
+            price: doc.data().package[0].price,
+            price_type: doc.data().package[0].price_type,
+            photo: doc.data().photo[0]
+          })
         })
+        this.setState({ listings: items })
       })
-      this.setState({ listings: items })
-    })
+  }
 
-    // get user's info
-    let info = firebase.database().ref("Users/" + user.uid)
-    info.once("value", snapshot => {
-      this.setState({ user_info: snapshot.val() })
+  renderProfileDetail() {
+    let user = firebase.auth().currentUser
+    firebase.database().ref("Users/" + user.uid).once("value")
+      .then(snapshot => {
+        this.setState({user_info: snapshot.val()})
 
-      if (snapshot.val().description !== undefined) {
-        this.setState({ description: snapshot.val().description })
-      }
+        if (snapshot.val().description !== undefined) {
+          this.setState({description: snapshot.val().description})
+        }
+  
+        if (snapshot.val().review !== undefined) {
+          let total_stars = snapshot.val().review.total_stars
+          let total_count = snapshot.val().review.count
+          var val = total_stars / total_count
+          this.setState({ review_stars: val, review_count: total_count })
+          this.getReviews()
+        }
+      })
+  }
 
-      if (snapshot.val().review !== undefined) {
-        let total_stars = snapshot.val().review.total_stars
-        let total_count = snapshot.val().review.count
-        var val = total_stars / total_count
-        this.setState({ review_stars: val, review_count: total_count })
-        this.getReviews()
-      }
-    })
-
-    // get user's skills
+  renderSkills() { // get user's skills
+    let user = firebase.auth().currentUser
     let skill_ref = firebase.database().ref("Skills").child(user.uid)
     skill_ref.once("value").then(snapshot => {
       var items = []
@@ -185,8 +193,8 @@ export default class Profile extends React.Component {
                 title={item.skillName}
                 style={{ width: width * 0.9 }}
               />}
-          />
-        </View>
+	          />
+	        </View>
       )
     }
   }
@@ -219,7 +227,7 @@ export default class Profile extends React.Component {
               <Text style={{ fontSize: 30, padding: 20, fontWeight: "bold" }}>
                 {user.displayName}
               </Text>
-              <Subtitle> </Subtitle>
+              <Subtitle>  </Subtitle>
               <View
                 style={{
                   flexDirection: "row",
@@ -238,9 +246,7 @@ export default class Profile extends React.Component {
                   {this.state.review_stars} ({this.state.review_count})
                 </Text>
               </View>
-              <Text style={{ padding: 10 }}>
-                {this.state.description}
-              </Text>
+              <Text style={{ padding: 10 }}>{this.state.description}</Text>
             </View>
           </View>
 

@@ -128,15 +128,6 @@ const AppStackNavigator = createStackNavigator(
         header: null
       })
     },
-    Review: {
-      screen: reviewScreen,
-      navigationOptions: () => ({
-        title: 'Rate Service',
-        headerStyle: {
-          backgroundColor: 'white'
-        }
-      })
-    },
     Skill: {
       screen: skillScreen,
       navigationOptions: () => ({
@@ -147,6 +138,15 @@ const AppStackNavigator = createStackNavigator(
       screen: adminScreen,
       navigationOptions: () => ({
         header: null
+      })
+    },
+    Review: {
+      screen: reviewScreen,
+      navigationOptions: () => ({
+        title: 'Rate Service',
+        headerStyle: {
+          backgroundColor: 'white'
+        }
       })
     }
   },

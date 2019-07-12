@@ -15,9 +15,14 @@ import {
   Card,
   Header,
   Button,
-  Rating
+  Rating,
+  PricingCard
 } from "react-native-elements"
 import firebase from "firebase"
+import Swiper from "react-native-swiper"
+
+const pkg_name = ["Basic", "Premium", "Exclusive"]
+const pkg_theme = ["#4f9deb", "#d14feb", "#de4759"]
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -26,6 +31,8 @@ export default class Details extends React.Component {
     key: this.props.navigation.state.params.ref, //item id
     details: "",
     servicer: "",
+    photos: [],
+    packages: [{price: "", price_type: "", info: ""}],
     reviews: [],
     disabled_btn: true
   }
@@ -60,30 +67,6 @@ export default class Details extends React.Component {
       })
       .then(() => {
         alert("Request to book service has been sent!")
-      })
-  }
-
-  addToBookMark() {
-    let user = firebase.auth().currentUser
-    // Creates a new bookmark for user, if it doesn't already exist
-    let ref = firebase.database().ref("Bookmarks").child(user.uid)
-
-    // Pushes the listing into bookmark page
-    ref
-      .push({
-        request_id: user.uid,
-        request_name: user.displayName,
-        servicer_id: this.state.servicer.userid,
-        servicer_name: this.state.servicer.username,
-        itempic: this.state.details.photo,
-        itemid: this.state.key,
-        itemname: this.state.details.title,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        price: this.state.details.price,
-        price_type: this.state.details.price_type
-      })
-      .then(() => {
-        alert("Listing has been bookmarked!")
       })
   }
 
@@ -135,27 +118,6 @@ export default class Details extends React.Component {
     )
   }
 
-  /**
-    allowChat() {
-      let user = firebase.auth().currentUser
-      if (this.state.servicer.userid !== user.uid) {
-        <Icon 
-        name='message' 
-        onPress= {() => this.props.navigation.navigate("Chat", {ref: this.state.servicer.userid})}
-        />
-      }
-    }
-
-    showBtn() {
-      let user = firebase.auth().currentUser
-      if (this.state.servicer.userid !== user.uid) {
-        return 1
-      } else {
-        return 0
-      }
-    }
-    */
-
   // Creates a reference under "Chats" in db, for both parties
   createChat(
     useruid,
@@ -189,40 +151,88 @@ export default class Details extends React.Component {
     })
   }
 
-  componentDidMount() {
-    var key = this.props.navigation.state.params.ref
-    let data_ref = firebase.database().ref("Listing").child(key)
-    this.setState({ key: key })
+  renderListingDetail(callback) {
+    //get all listings from db in array form
+    firebase.firestore().collection("Listing").doc(this.state.key).get()
+      .then(doc => {
+        if (doc.exists) {
+          this.setState({ 
+            details: doc.data(), 
+            photos: doc.data().photo,
+            packages: doc.data().package
+          })
+          callback()
+        }
+      })
+      .catch(err => {
+        console.log('Error getting documents', err)
+      })
+  }
 
-    data_ref
-      .once("value")
-      .then(snapshot => {
-        //listing details
-        this.setState({ details: snapshot.val() })
+  renderServicerDetail() {
+    let user = firebase.auth().currentUser
+    firebase.database().ref("Users").child(this.state.details.userid)
+      .once("value").then(snapshot => {
+        this.setState({ servicer: snapshot.val() })
+
+        if (this.state.details.userid !== user.uid) {
+          this.setState({ disabled_btn: false }) //allow booking of service
+        }
+      })
+  }
+
+  showPics() {
+    return this.state.photos.map((value, index) => 
+      <Image key={index}
+        source={{uri: this.state.photos[index]}}
+        style={{ height: height * 0.3, width: width * 1, resizeMode: 'stretch'}}
+      />
+    )
+  }
+
+  pricingPackage() {
+    return this.state.packages.map((item, index) => 
+      <PricingCard
+        key={index.toString()}
+        color={pkg_theme[index]}
+        title={pkg_name[index]}
+        price={`$${item.price} / ${item.price_type}`}
+        info={[item.info]}
+        button={{title: ""}}
+        containerStyle={{width: 230, height: 200}}
+        pricingStyle={{fontSize: 20}}
+        titleStyle={{fontSize: 27}}
+      />
+    )
+  }
+
+  addToBookMark() {
+    let user = firebase.auth().currentUser
+    // Creates a new bookmark for user, if it doesn't already exist
+    let ref = firebase.database().ref("Bookmarks").child(user.uid)
+
+    // Pushes the listing into bookmark page
+    ref
+      .push({
+        request_id: user.uid,
+        request_name: user.displayName,
+        servicer_id: this.state.servicer.userid,
+        servicer_name: this.state.servicer.username,
+        itempic: this.state.details.photo,
+        itemid: this.state.key,
+        itemname: this.state.details.title,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        price: this.state.details.price,
+        price_type: this.state.details.price_type
       })
       .then(() => {
-        //servicer details
-        let user_ref = firebase
-          .database()
-          .ref("Users")
-          .child(this.state.details.userid)
-
-        let user = firebase.auth().currentUser
-
-        user_ref
-          .once("value")
-          .then(snapshot => {
-            this.setState({ servicer: snapshot.val() })
-
-            if (this.state.servicer.userid !== user.uid) {
-              this.setState({ disabled_btn: false }) //allow booking of service
-            }
-          })
-          .then(() => {
-            //reviews on listing
-            this.getReviews()
-          })
+        alert("Listing has been bookmarked!")
       })
+  }
+
+  componentDidMount() {
+    this.renderListingDetail(() => this.renderServicerDetail())
+    this.getReviews()
   }
 
   render() {
@@ -230,7 +240,7 @@ export default class Details extends React.Component {
       <View>
         <Header
           centerComponent={{
-            text: `${this.state.details.title}`,
+            text: "Service Details",
             style: { fontSize: 20, fontWeight: "bold" }
           }}
           rightComponent={
@@ -246,46 +256,46 @@ export default class Details extends React.Component {
                   this.state.servicer.userid,
                   this.state.servicer.username,
                   this.state.key,
-                  this.state.details.photo,
+                  this.state.photos[0],
                   this.state.details.title
                 )
               }}
             />
           }
-          backgroundColor="#e6ebed"
+          backgroundColor="white"
         />
 
         <ScrollView style={{ height: height * 0.8 }}>
           <View style={styles.container}>
-            <Card>
-              <H1 style={{ padding: 10, fontWeight: "bold" }}>
-                {this.state.details.title}
-              </H1>
+            <Text style={{ padding: 10, fontSize: 30, fontWeight: "bold", textAlign: "left", alignSelf: "stretch" }}>
+              {this.state.details.title}
+            </Text>
 
-              <Image //item's image
-                source={{ uri: this.state.details.photo }}
-                resizeMode="cover"
-                style={{ height: height * 0.3, width: width * 0.9 }}
-              />
+            <Swiper style={{ height: height * 0.3}} horizontal={true} showsButtons={true}>
+              {this.showPics()}
+            </Swiper>
 
-              <ListItem //servicer dp and username
-                leftAvatar={{
-                  source: { uri: this.state.servicer.profilepic }
-                }}
-                title={this.state.servicer.username}
-                onPress={() => this.linkProfile()}
-                chevron
-              />
+            <ListItem //servicer dp and username
+              leftAvatar={{
+                source: { uri: this.state.servicer.profilepic }
+              }}
+              title={this.state.servicer.username}
+              onPress={() => this.linkProfile()}
+              containerStyle={{ width: width * 0.95}}
+              chevron
+            />
 
-              <Subtitle>Package</Subtitle>
-              <Title>
-                SGD{this.state.details.price} / {this.state.details.price_type}
-              </Title>
-
-              <Text style={styles.description}>
-                {this.state.details.description}
-              </Text>
+            {/** show package details */}
+            <Card containerStyle={{height: 270}}>
+            <Text style={styles.title}>Package</Text>
+            <ScrollView horizontal={true} style={{flexDirection: "row"}}>
+            {this.pricingPackage()}
+            </ScrollView>
             </Card>
+
+            <Text style={styles.description}>
+              {this.state.details.description}
+            </Text>
 
             {/** show reviews */}
             {this.displayReviews()}
@@ -302,7 +312,7 @@ export default class Details extends React.Component {
             disabled={this.state.disabled_btn}
             onPress={() => this.pendingService()}
           />
-
+          
           <Button
             containerStyle={{ width: width * 0.2 }}
             type="clear"
@@ -323,9 +333,12 @@ const styles = StyleSheet.create({
   },
   description: {
     padding: 10,
+    marginTop: 10,
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 17
+    fontSize: 17,
+    width: width * 0.9,
+    height: height * 0.3
   },
   bottomBtn: {
     flexDirection: "row",
@@ -335,5 +348,16 @@ const styles = StyleSheet.create({
   },
   fl: {
     marginTop: 20
+  },
+  bthnHide: {
+    width: 10,
+    height: 10
+  },
+  title: {
+    marginLeft: 20, 
+    fontSize: 15, 
+    fontWeight: "bold", 
+    color: "grey", 
+    alignSelf: "stretch"
   }
 })
