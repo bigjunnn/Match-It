@@ -1,13 +1,6 @@
 import React from "react"
 import { StyleSheet, View, Dimensions, Linking } from "react-native"
-import {
-  Form,
-  Item,
-  Input,
-  Text,
-  Button,
-  Label
-} from "native-base"
+import { Form, Item, Input, Text, Button, Label } from "native-base"
 import firebase from "firebase"
 import { Header, Avatar } from "react-native-elements"
 import ImagePicker from "react-native-image-crop-picker"
@@ -16,32 +9,31 @@ import RNFetchBlob from "rn-fetch-blob"
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 export default class UpdateProfile extends React.Component {
-  
   // Manage State
-  state = { 
+  state = {
     user: firebase.auth().currentUser,
-    username: firebase.auth().currentUser.displayName, 
+    username: firebase.auth().currentUser.displayName,
     avatar: firebase.auth().currentUser.photoURL,
     description: ""
   }
-  
+
   verifyUsername() {
     //detected changes, proceed to verify
-    if (this.state.username !== this.state.user.displayName) { 
-    firebase
-      .database()
-      .ref('Usernames')
-      .child(this.state.username)
-      .once('value', snapshot => {
-        return snapshot.exists()
-      })
-      .then(exist => {
-        if (exist) {
-          this.verify()
-        } else {
-          alert('Username is taken! Try again!')
-        }
-      })
+    if (this.state.username !== this.state.user.displayName) {
+      firebase
+        .database()
+        .ref("Usernames")
+        .child(this.state.username)
+        .once("value", snapshot => {
+          return snapshot.exists()
+        })
+        .then(exist => {
+          if (exist) {
+            this.verify()
+          } else {
+            alert("Username is taken! Try again!")
+          }
+        })
     } else {
       this.verify()
     }
@@ -53,14 +45,20 @@ export default class UpdateProfile extends React.Component {
 
   updateUsername = () => {
     var userf = firebase.auth().currentUser
-    firebase.database().ref('Usernames').child(userf.displayName).remove()
-    firebase.database().ref('Usernames').child(this.state.username).set(userf.uid)
-    userf.updateProfile({
-      displayName: this.state.username
-    }).then(() => {
-      alert("Your profile has been updated!")
-      this.props.navigation.navigate("Profile")
-    })
+    firebase.database().ref("Usernames").child(userf.displayName).remove()
+    firebase
+      .database()
+      .ref("Usernames")
+      .child(this.state.username)
+      .set(userf.uid)
+    userf
+      .updateProfile({
+        displayName: this.state.username
+      })
+      .then(() => {
+        alert("Your profile has been updated!")
+        this.props.navigation.navigate("Profile")
+      })
   }
 
   updateAvatar = () => {
@@ -72,6 +70,7 @@ export default class UpdateProfile extends React.Component {
 
   uploadImage(uri) {
     // Prepare Blob support
+    window = global
     const Blob = RNFetchBlob.polyfill.Blob
     const fs = RNFetchBlob.fs
     window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest
@@ -94,8 +93,9 @@ export default class UpdateProfile extends React.Component {
         return imageRef.getDownloadURL()
       })
       .then(url => {
-        this.setState({ avatar: url }) 
-      }).then(() => {
+        this.setState({ avatar: url })
+      })
+      .then(() => {
         this.updateProfile()
       })
   }
@@ -108,15 +108,12 @@ export default class UpdateProfile extends React.Component {
       mediaType: "photo"
     }).then(image => {
       const imagePath = image.path
-      this.setState({avatar: imagePath})
+      this.setState({ avatar: imagePath })
     })
   }
 
   updateDatabase() {
-    firebase
-    .database()
-    .ref('Users/' + this.state.user.uid)
-    .update({
+    firebase.database().ref("Users/" + this.state.user.uid).update({
       username: this.state.username,
       profilepic: this.state.avatar,
       description: this.state.description
@@ -131,13 +128,13 @@ export default class UpdateProfile extends React.Component {
 
   componentDidMount() {
     firebase
-    .database()
-    .ref('Users/' + this.state.user.uid)
-    .once("value", snapshot => {
-      if (snapshot.val().description !== undefined) {
-        this.setState({ description: snapshot.val().description})
-      }
-    })
+      .database()
+      .ref("Users/" + this.state.user.uid)
+      .once("value", snapshot => {
+        if (snapshot.val().description !== undefined) {
+          this.setState({ description: snapshot.val().description })
+        }
+      })
   }
 
   render() {
@@ -151,7 +148,7 @@ export default class UpdateProfile extends React.Component {
             style: { fontSize: 20, fontWeight: "bold" }
           }}
         />
-        
+
         <Form style={({ color: "black" }, styles.input)}>
           <Item stackedLabel>
             <Label>Username</Label>
@@ -160,24 +157,26 @@ export default class UpdateProfile extends React.Component {
               maxLength={12}
               onChangeText={username => this.setState({ username })}
               value={this.state.username}
-              style={{ width: width * 0.8, height: height * 0.1}}
+              style={{ width: width * 0.8, height: height * 0.1 }}
             />
           </Item>
 
-          <Avatar 
-          size={width * 0.5}
-          source={{ uri: this.state.avatar }}
-          containerStyle={{padding: 10}}
-          showEditButton
-          onEditPress={() => this.chooseImage()}
+          <Avatar
+            size={width * 0.5}
+            source={{ uri: this.state.avatar }}
+            containerStyle={{ padding: 10 }}
+            showEditButton
+            onEditPress={() => this.chooseImage()}
           />
 
-          <Item stackedLabel 
+          <Item
+            stackedLabel
             style={{
-            height: height * 0.2,
-            alignContent: "center",
-            alignItems: "center"
-          }}>
+              height: height * 0.2,
+              alignContent: "center",
+              alignItems: "center"
+            }}
+          >
             <Label>Description</Label>
             <Input
               autoCapitalize="none"
@@ -188,7 +187,7 @@ export default class UpdateProfile extends React.Component {
               }}
               onChangeText={description => this.setState({ description })}
               value={this.state.description}
-              style={{ width: width * 0.8, height: height * 0.4}}
+              style={{ width: width * 0.8, height: height * 0.4 }}
             />
           </Item>
         </Form>
@@ -208,7 +207,7 @@ export default class UpdateProfile extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
     // backgroundColor: "#fff6f5"
   },
   input: {
