@@ -138,7 +138,7 @@ export default class Create extends React.Component {
       errors.category = "Please select a category"
       checker = false
     }
-    if (this.state.photo === "") {
+    if (this.state.photo[0] === undefined) {
       errors.photo = "Please select a photo"
       checker = false
     }
