@@ -7,15 +7,17 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from "react-native"
 import { Title, Subtitle } from "native-base"
 import { Header, Avatar, Rating, ListItem, Icon } from "react-native-elements"
 import firebase from "firebase"
+import { withNavigation } from "react-navigation"
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
-export default class Profile extends React.Component {
+class ServicerProfile extends React.Component {
   state = {
     listings: [],
     activeIndex: 0,
@@ -24,14 +26,27 @@ export default class Profile extends React.Component {
     description: "",
     review_stars: 0.0,
     review_count: 0,
-    reviews: []
+    reviews: [],
+    refreshing: false
   }
 
   keyExtractor = (item, index) => index.toString()
 
   componentDidMount() {
-    this.renderListings()
+    const { navigation } = this.props
+    this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
     this.renderServicerDetail()
+    this.renderSkills()
+  }
+
+  componentWillUnmount() {
+    // remove all listeners
+    this.focusListener.remove()
+  }
+
+  onRefresh = () => {
+    this.setState({refreshing: true})
+    this.renderListings()
   }
 
   renderListings() {
@@ -49,14 +64,14 @@ export default class Profile extends React.Component {
             photo: doc.data().photo[0]
           })
         })
-        this.setState({ listings: items })
+        this.setState({ listings: items, refreshing: false })
       })
   }
 
   renderServicerDetail() {
     let servicer = this.state.servicerid
-    firebase.database().ref("Users/" + servicer).once("value")
-      .then(snapshot => {
+    firebase.database().ref("Users/" + servicer)
+      .on("value", snapshot => {
         this.setState({servicer: snapshot.val()})
 
         if (snapshot.val().description !== undefined) {
@@ -73,13 +88,27 @@ export default class Profile extends React.Component {
       })
   }
 
+  renderSkills() { // get user's skills
+    let skill_ref = firebase.database().ref("Skills").child(this.state.servicerid)
+    onSkillChange = skill_ref.on("value", snapshot => {
+      var items = []
+      snapshot.forEach(child => {
+        items.push({
+          category: child.val().category,
+          skillName: child.val().skillName
+        })
+      })
+      this.setState({ skills: items })
+    })
+  }
+
   getReviews() {
     firebase
       .database()
       .ref("Review")
       .child("Users")
       .child(this.state.servicerid)
-      .once("value", snapshot => {
+      .on("value", snapshot => {
         var items = []
         snapshot.forEach(snap => {
           items.push(snap.val())
@@ -150,7 +179,33 @@ export default class Profile extends React.Component {
     } else if (this.state.activeIndex == 2) {
       //SKILLS
       return (
-        <Text style={{ marginTop: 20, fontSize: 30 }}>Coming Soon ...</Text>
+        <View style={styles.skillsContainer}>
+          <Button
+            title="Add a skill"
+            type="solid"
+            onPress={() => this.props.navigation.navigate("Skill")}
+          />
+
+          <FlatList
+            style={styles.fl}
+            data={this.state.skills}
+            keyExtractor={this.keyExtractor}
+            renderItem={({ item }) =>
+              <ListItem
+                leftAvatar={{
+                  rounded: true,
+                  size: "medium",
+                  overlayContainerStyle: { backgroundColor: "orange" },
+                  icon: {
+                    name: item.category,
+                    type: "font-awesome"
+                  }
+                }}
+                title={item.skillName}
+                style={{ width: width * 0.9 }}
+              />}
+	        />
+	      </View>
       )
     }
   }
@@ -167,7 +222,14 @@ export default class Profile extends React.Component {
           }}
         />
 
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh}
+            />
+        }
+        >
           <View style={{ flexDirection: "row" }}>
             <View>
               <Avatar
@@ -237,6 +299,8 @@ export default class Profile extends React.Component {
     )
   }
 }
+export default withNavigation(ServicerProfile)
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

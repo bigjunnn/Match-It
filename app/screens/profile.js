@@ -7,15 +7,20 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from "react-native"
 import { Title, Subtitle } from "native-base"
 import { Header, Avatar, Rating, ListItem, Icon } from "react-native-elements"
 import firebase from "firebase"
+import { withNavigation } from "react-navigation"
 
+var onProfileChange = ""
+var onSkillChange = ""
+var listingsub = ""
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
-export default class Profile extends React.Component {
+class Profile extends React.Component {
   state = {
     user: firebase.auth().currentUser,
     listings: [],
@@ -25,22 +30,37 @@ export default class Profile extends React.Component {
     review_stars: 0.0,
     review_count: 0,
     reviews: [],
-    skills: []
+    skills: [],
+    refreshing: false
   }
 
   keyExtractor = (item, index) => index.toString()
 
   componentDidMount() {
-    this.renderListings()
+    const { navigation } = this.props
+    this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
     this.renderProfileDetail()
     this.renderSkills()
+  }
+
+  componentWillUnmount() {
+    // remove all listeners
+    this.focusListener.remove()
+    firebase.database().ref("Users/" + user.uid).off("value", onProfileChange)
+    firebase.database().ref("Skills").child(user.uid).off("value", onSkillChange)
+    listingsub()
+  }
+
+  onRefresh = () => {
+    this.setState({refreshing: true})
+    this.renderListings()
   }
 
   renderListings() {
     window = undefined
     let user = firebase.auth().currentUser
-    firebase.firestore().collection('Listing').where('userid', '==', user.uid)
-      .get().then(snapshot => {
+    listingsub = firebase.firestore().collection('Listing').where('userid', '==', user.uid)
+      .onSnapshot(snapshot => {
         var items = []
         snapshot.forEach(doc => {
           items.push({
@@ -51,14 +71,14 @@ export default class Profile extends React.Component {
             photo: doc.data().photo[0]
           })
         })
-        this.setState({ listings: items })
+        this.setState({ listings: items, refreshing: false })
       })
   }
 
   renderProfileDetail() {
     let user = firebase.auth().currentUser
-    firebase.database().ref("Users/" + user.uid).once("value")
-      .then(snapshot => {
+    onProfileChange = firebase.database().ref("Users/" + user.uid).
+      on("value", snapshot => {
         this.setState({user_info: snapshot.val()})
 
         if (snapshot.val().description !== undefined) {
@@ -78,7 +98,7 @@ export default class Profile extends React.Component {
   renderSkills() { // get user's skills
     let user = firebase.auth().currentUser
     let skill_ref = firebase.database().ref("Skills").child(user.uid)
-    skill_ref.once("value").then(snapshot => {
+    onSkillChange = skill_ref.on("value", snapshot => {
       var items = []
       snapshot.forEach(child => {
         items.push({
@@ -97,7 +117,7 @@ export default class Profile extends React.Component {
       .ref("Review")
       .child("Users")
       .child(this.state.user.uid)
-      .once("value", snapshot => {
+      .on("value", snapshot => {
         var items = []
         snapshot.forEach(snap => {
           items.push(snap.val())
@@ -116,12 +136,13 @@ export default class Profile extends React.Component {
           data={this.state.listings}
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
+          item.photo[0] !== undefined ? (
             <TouchableOpacity
               onPress={() =>
                 this.props.navigation.navigate("Details", { ref: item.key })}
             >
               <ListItem
-                leftAvatar={{
+                leftAvatar={item.photo[0] !== undefined && { 
                   size: "large",
                   rounded: false,
                   source: { uri: item.photo }
@@ -130,7 +151,8 @@ export default class Profile extends React.Component {
                 subtitle={`${item.price} / ${item.price_type}`}
                 style={{ width: width * 0.9 }}
               />
-            </TouchableOpacity>}
+            </TouchableOpacity>
+          ) : null}
         />
       )
     } else if (this.state.activeIndex == 1) {
@@ -211,7 +233,14 @@ export default class Profile extends React.Component {
           }}
         />
 
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh}
+            />
+          }
+        >
           <View style={{ flexDirection: "row" }}>
             <View>
               <Avatar
@@ -284,6 +313,8 @@ export default class Profile extends React.Component {
     )
   }
 }
+export default withNavigation(Profile)
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

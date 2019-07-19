@@ -178,7 +178,7 @@ export default class ChatLog extends React.Component {
       .child("Pending")
       .orderByChild("servicer_id")
       .equalTo(user.uid)
-    query.once("value").then(snapshot => {
+    query.on("value", snapshot => {
       var items = []
       snapshot.forEach(child => {
         items.push({
@@ -203,7 +203,7 @@ export default class ChatLog extends React.Component {
       .child("Confirmed")
       .orderByChild("request_id")
       .equalTo(user.uid)
-    query.once("value").then(snapshot => {
+    query.on("value", snapshot => {
       var items = []
       snapshot.forEach(child => {
         items.push({
@@ -231,8 +231,7 @@ export default class ChatLog extends React.Component {
       .ref("Booking")
       .child("Pending")
       .child(key)
-      .once("value")
-      .then(snapshot => {
+      .on("value", snapshot => {
         let book_ref = firebase.database().ref("Booking").child("Confirmed")
         book_ref
           .push(snapshot.val())
@@ -261,7 +260,7 @@ export default class ChatLog extends React.Component {
   showChats() {
     let user = firebase.auth().currentUser
     let chatRef = firebase.database().ref("Chats").child(user.uid)
-    chatRef.once("value").then(snapshot => {
+    chatRef.on("value", snapshot => {
       var chatArr = []
       snapshot.forEach(child => {
         var chateeID = child.val().chateeID

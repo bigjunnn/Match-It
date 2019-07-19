@@ -162,6 +162,9 @@ export default class Details extends React.Component {
             packages: doc.data().package
           })
           callback()
+        } else {
+          alert("Oops! Service no longer available!")
+          this.props.navigation.navigate("Home")
         }
       })
       .catch(err => {
@@ -271,7 +274,14 @@ export default class Details extends React.Component {
               {this.state.details.title}
             </Text>
 
-            <Swiper style={{ height: height * 0.3}} horizontal={true} showsButtons={true}>
+            <Swiper 
+            style={{ height: height * 0.3}} 
+            horizontal={true} 
+            showsButtons={true} 
+            containerStyle={{ alignSelf: 'stretch' }}
+            activeDotColor={"white"}
+            loop={false}
+            removeClippedSubviews={false}>
               {this.showPics()}
             </Swiper>
 

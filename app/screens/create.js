@@ -18,7 +18,6 @@ import { Header, Button } from "react-native-elements"
 import { TextField } from "react-native-material-textfield"
 import firebase from "firebase"
 import 'firebase/firestore'
-import uuid from "uuid/v4" // Import UUID to generate UUID
 import RNFetchBlob from "rn-fetch-blob"
 import SectionedMultiSelect from "react-native-sectioned-multi-select"
 import TagInput from "react-native-tag-input"
@@ -28,7 +27,7 @@ var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 const pkg_name = ["Basic", "Premium", "Exclusive"]
 
-export default class Home extends React.Component {
+export default class Create extends React.Component {
   constructor(props) {
     super(props)
 
@@ -164,7 +163,7 @@ export default class Home extends React.Component {
     let ref = firebase.firestore().collection('Tags').doc('General')
     let FieldValue = firebase.firestore.FieldValue
     this.state.tags.forEach((item) => {
-      ref.update({ item: FieldValue.increment(1) })
+      ref.update(item, FieldValue.increment(1))
     })
   }
 
@@ -189,7 +188,7 @@ export default class Home extends React.Component {
     })
   }
 
-  uploadImage(image, image_name ,listingKey) {
+  uploadImage(image, image_name, listingKey) {
     let user = firebase.auth().currentUser
     let imageRef = firebase.storage().ref(user.uid + "/Listing/" + listingKey + "/").child(image_name)
     const mime = image.mime
@@ -226,7 +225,13 @@ export default class Home extends React.Component {
 
   async uploadImages(listingKey) {
     const uploadImagePromises = this.state.photo.map((img, index) => this.uploadImage(img, "image_" + index ,listingKey))
-    const urls = await Promise.all(uploadImagePromises)
+    const url = await Promise.all(uploadImagePromises)
+    let urls = url
+    if (!Array.isArray(url)) {
+      let arr = []
+      arr.push(url)
+      urls = arr
+    }
     firebase.firestore().collection('Listing').doc(listingKey)
     .update({ photo: urls })
     .then(() => {

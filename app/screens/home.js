@@ -6,17 +6,23 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from "react-native"
 import { Title } from "native-base"
 import { Header, ListItem, Icon } from "react-native-elements"
 import firebase from "firebase"
+import { withNavigation } from "react-navigation"
 
+var listingsub = ""
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
-export default class Home extends React.Component {
+class Home extends React.Component {
   // Define current state
-  state = { listing: [] }
+  state = { 
+    listing: [],
+    refreshing: false 
+  }
 
   keyExtractor = (item, index) => index.toString()
 
@@ -25,23 +31,34 @@ export default class Home extends React.Component {
   }
 
   componentDidMount() {
-    this.renderListings()
+    const { navigation } = this.props
+    this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
+  }
+
+  componentWillUnmount() {
+    this.focusListener.remove()
+    listingsub()
   }
 
   renderListings() {
     //get all listings from db in array form
     window = undefined
-    firebase.firestore().collection("Listing").get()
+    listingsub = firebase.firestore().collection("Listing").get()
       .then(snapshot => {
         var items = []
         snapshot.forEach(doc => {
           items.push(doc.data())
         })
         this.setState({ listings: items})
-      })
-      .catch(err => {
+        this.setState({ refreshing: false }) // refresh completed
+      }, err => {
         console.log('Error getting documents', err)
       })
+  }
+
+  onRefresh = () => {
+    this.setState({refreshing: true})
+    this.renderListings()
   }
 
   render() {
@@ -70,7 +87,14 @@ export default class Home extends React.Component {
           backgroundColor="#f7ccc3"
         />
 
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh}
+            />
+          }
+        >
           <View style={styles.container}>
             <Text>
               Hi {user && user.email}!
@@ -89,7 +113,7 @@ export default class Home extends React.Component {
                     })}
                 >
                   <ListItem
-                    leftAvatar={{
+                    leftAvatar={{ 
                       size: "large",
                       rounded: false,
                       source: { uri: item.photo[0] }
@@ -98,7 +122,8 @@ export default class Home extends React.Component {
                     subtitle={`From SGD ${item.package[0].price} / ${item.package[0].price_type}`}
                     style={{ width: width * 0.9 }}
                   />
-                </TouchableOpacity>}
+                </TouchableOpacity>
+              }
             />
           </View>
         </ScrollView>
@@ -106,9 +131,12 @@ export default class Home extends React.Component {
     )
   }
 }
+export default withNavigation(Home)
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: height,
     justifyContent: "center",
     alignItems: "center"
   },
