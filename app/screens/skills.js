@@ -180,19 +180,27 @@ export default class SkillProfile extends React.Component {
     let admin_uid = "CGIx1TmGQqYajo5jn7WXiiGvwrx2"
     let user = firebase.auth().currentUser
     let user_ref = firebase.database().ref("Skills").child(admin_uid)
+    let dp_ref = firebase.database().ref("Users").child(user.uid)
 
-    // Push skill info into DB
-    var skillData = {
-      userid: user.uid,
-      skillName: this.state.skillName,
-      category: this.state.category,
-      description: this.state.description
-    }
+    dp_ref.on("value", snapshot => {
+      var userdp = snapshot.val().profilepic
+      var username = snapshot.val().username
 
-    var ref = user_ref.push(skillData)
-    var skillKey = ref.key
-    this.uploadImages(skillKey)
-    user_ref.child(skillKey).update({ skillKey: skillKey })
+      // Push skill info into DB
+      var skillData = {
+        userid: user.uid,
+        userdp: userdp,
+        username: username,
+        skillName: this.state.skillName,
+        category: this.state.category,
+        description: this.state.description
+      }
+
+      var ref = user_ref.push(skillData)
+      var skillKey = ref.key
+      this.uploadImages(skillKey)
+      user_ref.child(skillKey).update({ skillKey: skillKey })
+    })
   }
 
   render() {

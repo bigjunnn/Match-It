@@ -21,6 +21,7 @@ import reviewScreen from './screens/review'
 import bookmarkScreen from './screens/bookmark'
 import skillScreen from './screens/skills'
 import adminScreen from './screens/admin'
+import skillDetailsScreen from './screens/skill_details'
 
 const BottomTabNavigator = createBottomTabNavigator(
   {
@@ -147,6 +148,12 @@ const AppStackNavigator = createStackNavigator(
         headerStyle: {
           backgroundColor: 'white'
         }
+      })
+    },
+    SkillDetails: {
+      screen: skillDetailsScreen,
+      navigationOptions: () => ({
+        header: null
       })
     }
   },

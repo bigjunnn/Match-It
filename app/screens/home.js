@@ -19,9 +19,9 @@ var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
 class Home extends React.Component {
   // Define current state
-  state = { 
+  state = {
     listing: [],
-    refreshing: false 
+    refreshing: false
   }
 
   keyExtractor = (item, index) => index.toString()
@@ -30,34 +30,36 @@ class Home extends React.Component {
     firebase.auth().signOut().then(this.props.navigation.navigate("Login"))
   }
 
-  componentDidMount() {
-    const { navigation } = this.props
-    this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
-  }
+  // componentDidMount() {
+  //   const { navigation } = this.props
+  //   this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
+  // }
 
-  componentWillUnmount() {
-    this.focusListener.remove()
-    listingsub()
-  }
+  // componentWillUnmount() {
+  //   this.focusListener.remove()
+  //   listingsub()
+  // }
 
   renderListings() {
     //get all listings from db in array form
     window = undefined
-    listingsub = firebase.firestore().collection("Listing").get()
-      .then(snapshot => {
+    listingsub = firebase.firestore().collection("Listing").get().then(
+      snapshot => {
         var items = []
         snapshot.forEach(doc => {
           items.push(doc.data())
         })
-        this.setState({ listings: items})
+        this.setState({ listings: items })
         this.setState({ refreshing: false }) // refresh completed
-      }, err => {
-        console.log('Error getting documents', err)
-      })
+      },
+      err => {
+        console.log("Error getting documents", err)
+      }
+    )
   }
 
   onRefresh = () => {
-    this.setState({refreshing: true})
+    this.setState({ refreshing: true })
     this.renderListings()
   }
 
@@ -113,17 +115,17 @@ class Home extends React.Component {
                     })}
                 >
                   <ListItem
-                    leftAvatar={{ 
+                    leftAvatar={{
                       size: "large",
                       rounded: false,
                       source: { uri: item.photo[0] }
                     }}
                     title={item.title}
-                    subtitle={`From SGD ${item.package[0].price} / ${item.package[0].price_type}`}
+                    subtitle={`From SGD ${item.package[0].price} / ${item
+                      .package[0].price_type}`}
                     style={{ width: width * 0.9 }}
                   />
-                </TouchableOpacity>
-              }
+                </TouchableOpacity>}
             />
           </View>
         </ScrollView>

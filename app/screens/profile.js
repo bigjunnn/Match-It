@@ -37,29 +37,32 @@ class Profile extends React.Component {
   keyExtractor = (item, index) => index.toString()
 
   componentDidMount() {
-    const { navigation } = this.props
-    this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
+    // const { navigation } = this.props
+    // this.focusListener = navigation.addListener("didFocus", () => this.renderListings())
     this.renderProfileDetail()
     this.renderSkills()
   }
 
-  componentWillUnmount() {
-    // remove all listeners
-    this.focusListener.remove()
-    firebase.database().ref("Users/" + user.uid).off("value", onProfileChange)
-    firebase.database().ref("Skills").child(user.uid).off("value", onSkillChange)
-    listingsub()
-  }
+  // componentWillUnmount() {
+  //   // remove all listeners
+  //   this.focusListener.remove()
+  //   firebase.database().ref("Users/" + user.uid).off("value", onProfileChange)
+  //   firebase.database().ref("Skills").child(user.uid).off("value", onSkillChange)
+  //   listingsub()
+  // }
 
   onRefresh = () => {
-    this.setState({refreshing: true})
+    this.setState({ refreshing: true })
     this.renderListings()
   }
 
   renderListings() {
     window = undefined
     let user = firebase.auth().currentUser
-    listingsub = firebase.firestore().collection('Listing').where('userid', '==', user.uid)
+    listingsub = firebase
+      .firestore()
+      .collection("Listing")
+      .where("userid", "==", user.uid)
       .onSnapshot(snapshot => {
         var items = []
         snapshot.forEach(doc => {
@@ -77,14 +80,16 @@ class Profile extends React.Component {
 
   renderProfileDetail() {
     let user = firebase.auth().currentUser
-    onProfileChange = firebase.database().ref("Users/" + user.uid).
-      on("value", snapshot => {
-        this.setState({user_info: snapshot.val()})
+    onProfileChange = firebase
+      .database()
+      .ref("Users/" + user.uid)
+      .on("value", snapshot => {
+        this.setState({ user_info: snapshot.val() })
 
         if (snapshot.val().description !== undefined) {
-          this.setState({description: snapshot.val().description})
+          this.setState({ description: snapshot.val().description })
         }
-  
+
         if (snapshot.val().review !== undefined) {
           let total_stars = snapshot.val().review.total_stars
           let total_count = snapshot.val().review.count
@@ -95,7 +100,8 @@ class Profile extends React.Component {
       })
   }
 
-  renderSkills() { // get user's skills
+  renderSkills() {
+    // get user's skills
     let user = firebase.auth().currentUser
     let skill_ref = firebase.database().ref("Skills").child(user.uid)
     onSkillChange = skill_ref.on("value", snapshot => {
@@ -136,23 +142,27 @@ class Profile extends React.Component {
           data={this.state.listings}
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
-          item.photo[0] !== undefined ? (
-            <TouchableOpacity
-              onPress={() =>
-                this.props.navigation.navigate("Details", { ref: item.key })}
-            >
-              <ListItem
-                leftAvatar={item.photo[0] !== undefined && { 
-                  size: "large",
-                  rounded: false,
-                  source: { uri: item.photo }
-                }}
-                title={item.title}
-                subtitle={`${item.price} / ${item.price_type}`}
-                style={{ width: width * 0.9 }}
-              />
-            </TouchableOpacity>
-          ) : null}
+            item.photo[0] !== undefined
+              ? <TouchableOpacity
+                  onPress={() =>
+                    this.props.navigation.navigate("Details", {
+                      ref: item.key
+                    })}
+                >
+                  <ListItem
+                    leftAvatar={
+                      item.photo[0] !== undefined && {
+                        size: "large",
+                        rounded: false,
+                        source: { uri: item.photo }
+                      }
+                    }
+                    title={item.title}
+                    subtitle={`${item.price} / ${item.price_type}`}
+                    style={{ width: width * 0.9 }}
+                  />
+                </TouchableOpacity>
+              : null}
         />
       )
     } else if (this.state.activeIndex == 1) {
@@ -215,8 +225,8 @@ class Profile extends React.Component {
                 title={item.skillName}
                 style={{ width: width * 0.9 }}
               />}
-	          />
-	        </View>
+          />
+        </View>
       )
     }
   }
@@ -256,7 +266,7 @@ class Profile extends React.Component {
               <Text style={{ fontSize: 30, padding: 20, fontWeight: "bold" }}>
                 {user.displayName}
               </Text>
-              <Subtitle>  </Subtitle>
+              <Subtitle> </Subtitle>
               <View
                 style={{
                   flexDirection: "row",
@@ -275,7 +285,9 @@ class Profile extends React.Component {
                   {this.state.review_stars} ({this.state.review_count})
                 </Text>
               </View>
-              <Text style={{ padding: 10 }}>{this.state.description}</Text>
+              <Text style={{ padding: 10 }}>
+                {this.state.description}
+              </Text>
             </View>
           </View>
 

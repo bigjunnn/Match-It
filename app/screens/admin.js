@@ -25,10 +25,10 @@ export default class Home extends React.Component {
       .database()
       .ref("Skills")
       .child("CGIx1TmGQqYajo5jn7WXiiGvwrx2")
-    let user = firebase.auth().currentUser
 
     // get admin's pending skills approval
     adminSkillRef.once("value").then(snapshot => {
+      let user_ref = firebase.database().ref("Users")
       var items = []
       snapshot.forEach(child => {
         items.push({
@@ -37,8 +37,10 @@ export default class Home extends React.Component {
           description: child.val().description,
           skillName: child.val().skillName,
           userid: child.val().userid,
+          userdp: child.val().userdp,
+          username: child.val().username,
           image: child.val().image,
-          skill_id: child.val().skill_id
+          skill_id: child.val().skillKey
         })
       })
       this.setState({ skills: items })
@@ -49,6 +51,7 @@ export default class Home extends React.Component {
   approveSkill(item) {
     var skillData = {
       userid: item.userid,
+      userdp: item.userdp,
       skillName: item.skillName,
       category: item.category,
       description: item.description,
@@ -85,45 +88,31 @@ export default class Home extends React.Component {
         <ScrollView>
           <View style={styles.container}>
             <Text>Hi Admin</Text>
-            <Title>View All Listing</Title>
 
             <FlatList
               style={styles.fl}
               data={this.state.skills}
               keyExtractor={this.keyExtractor}
               renderItem={({ item }) =>
-                <ListItem
-                  leftAvatar={{
-                    size: "large",
-                    rounded: false,
-                    source: {
-                      uri: item.image
-                    }
-                  }}
-                  title={item.skillName}
-                  style={{ width: width * 0.9 }}
-                  rightIcon={
-                    <View style={{ flexDirection: "row", width: width * 0.15 }}>
-                      <Icon //accept request
-                        name="check"
-                        type="antdesign"
-                        color="green"
-                        size={20}
-                        containerStyle={{ padding: 5 }}
-                        onPress={() => this.approveSkill(item)}
-                      />
-
-                      <Icon //reject request
-                        name="close"
-                        type="antdesign"
-                        color="red"
-                        size={20}
-                        containerStyle={{ padding: 5 }}
-                        onPress={() => this.rejectSkill(item.skill_id)}
-                      />
-                    </View>
-                  }
-                />}
+                <TouchableOpacity
+                  onPress={() =>
+                    this.props.navigation.navigate("SkillDetails", {
+                      ref: item.skill_id
+                    })}
+                >
+                  <ListItem
+                    leftAvatar={{
+                      size: "large",
+                      rounded: true,
+                      source: {
+                        uri: item.userdp
+                      }
+                    }}
+                    title={item.skillName}
+                    subtitle={item.username}
+                    style={{ width: width * 0.9 }}
+                  />
+                </TouchableOpacity>}
             />
           </View>
         </ScrollView>
