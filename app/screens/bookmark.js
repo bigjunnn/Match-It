@@ -74,7 +74,7 @@ export default class Home extends React.Component {
                     leftAvatar={{
                       size: "large",
                       rounded: false,
-                      source: { uri: item.itempic }
+                      source: { uri: item.itempic[0] }
                     }}
                     title={item.itemname}
                     subtitle={`SGD ${item.price} / ${item.price_type}`}

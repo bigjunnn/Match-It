@@ -50,18 +50,23 @@ export default class SkillDetails extends React.Component {
     let user_ref = firebase.database().ref("Skills").child(details.userid)
     var newSkillKey = user_ref.push(details).key
     user_ref.child(newSkillKey).update({ skillKey: newSkillKey })
-    this.rejectSkill(this.state.skillkey)
+    this.rejectSkill(this.state.skillkey, false)
 
     alert("You have approved the skill!")
+    this.props.navigation.navigate("Admin")
   }
 
   // Deletes the reference for admin user only
-  rejectSkill(key) {
+  rejectSkill(key, boolean) {
     let user = firebase.auth().currentUser
     var user_ref = firebase.database().ref("Skills").child(user.uid).child(key)
     user_ref.remove()
 
-    alert("You have rejected this skill submission")
+    if (boolean == true) {
+      alert("You have rejected this skill submission")
+    }
+
+    this.props.navigation.navigate("Admin")
   }
 
   componentDidMount() {
@@ -151,7 +156,7 @@ export default class SkillDetails extends React.Component {
               width: width * 0.4
             }}
             title="Reject"
-            onPress={() => this.rejectSkill(this.state.skillkey)}
+            onPress={() => this.rejectSkill(this.state.skillkey, true)}
           />
         </View>
       </View>

@@ -30,10 +30,11 @@ export default class Ratings extends React.Component {
       .then(() => this.updateListingLog())
       .then(() => this.updateListingRating())
       .then(() => {
-        this.removingRating(review_key)
         alert("Review Submitted!")
         this.props.navigation.navigate("Inbox")
       })
+
+    this.removingRating(this.state.review_key)
   }
 
   updateListingLog() {

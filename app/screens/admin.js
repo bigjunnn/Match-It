@@ -119,8 +119,8 @@ export default class Home extends React.Component {
                         uri: item.userdp
                       }
                     }}
-                    title={item.skillName}
-                    subtitle={item.username}
+                    title={`SkillName: ${item.skillName}`}
+                    subtitle={`Submitted By: ${item.username}`}
                     style={{ width: width * 0.9 }}
                   />
                 </TouchableOpacity>}

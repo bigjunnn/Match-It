@@ -76,7 +76,7 @@ export default class ChatLog extends React.Component {
                 source: { uri: item.itempic }
               }}
               title={`${item.itemname}`}
-              subtitle={`Servicer: ${item.servicer_name}`}
+              subtitle={`Requester: ${item.request_name}`}
               rightElement={
                 <View style={{ flexDirection: "row", width: width * 0.25 }}>
                   <Button
@@ -148,7 +148,7 @@ export default class ChatLog extends React.Component {
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
             <ListItem
-              style={{ width: width * 0.9 }}
+              style={{ width: width * 0.9, alignSelf: "center" }}
               leftAvatar={{
                 size: "medium",
                 rounded: false,
@@ -188,7 +188,7 @@ export default class ChatLog extends React.Component {
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
             <ListItem
-              style={{ width: width * 0.9 }}
+              style={{ width: width * 0.9, alignSelf: "center" }}
               leftAvatar={{
                 size: "medium",
                 rounded: false,
@@ -321,10 +321,9 @@ export default class ChatLog extends React.Component {
 
   // confirm booking of service - accept
   acceptBooking(key, itemid) {
-    firebase.firestore().collection("Listing").doc(itemid)
-      .update({
-        sales: firebase.firestore.FieldValue.increment(1)
-      })
+    firebase.firestore().collection("Listing").doc(itemid).update({
+      sales: firebase.firestore.FieldValue.increment(1)
+    })
 
     firebase
       .database()

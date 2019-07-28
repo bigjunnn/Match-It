@@ -31,7 +31,7 @@ export default class Details extends React.Component {
     details: "",
     servicer: "",
     photos: [],
-    packages: [{price: "", price_type: "", info: ""}],
+    packages: [{ price: "", price_type: "", info: "" }],
     reviews: [],
     disabled_btn: true
   }
@@ -152,11 +152,15 @@ export default class Details extends React.Component {
 
   renderListingDetail(callback) {
     //get all listings from db in array form
-    firebase.firestore().collection("Listing").doc(this.state.key).get()
+    firebase
+      .firestore()
+      .collection("Listing")
+      .doc(this.state.key)
+      .get()
       .then(doc => {
         if (doc.exists) {
-          this.setState({ 
-            details: doc.data(), 
+          this.setState({
+            details: doc.data(),
             photos: doc.data().photo,
             packages: doc.data().package
           })
@@ -167,14 +171,18 @@ export default class Details extends React.Component {
         }
       })
       .catch(err => {
-        console.log('Error getting documents', err)
+        console.log("Error getting documents", err)
       })
   }
 
   renderServicerDetail() {
     let user = firebase.auth().currentUser
-    firebase.database().ref("Users").child(this.state.details.userid)
-      .once("value").then(snapshot => {
+    firebase
+      .database()
+      .ref("Users")
+      .child(this.state.details.userid)
+      .once("value")
+      .then(snapshot => {
         this.setState({ servicer: snapshot.val() })
 
         if (this.state.details.userid !== user.uid) {
@@ -184,26 +192,31 @@ export default class Details extends React.Component {
   }
 
   showPics() {
-    return this.state.photos.map((value, index) => 
-      <Image key={index}
-        source={{uri: this.state.photos[index]}}
-        style={{ height: height * 0.3, width: width * 1, resizeMode: 'stretch'}}
+    return this.state.photos.map((value, index) =>
+      <Image
+        key={index}
+        source={{ uri: this.state.photos[index] }}
+        style={{
+          height: height * 0.3,
+          width: width * 1,
+          resizeMode: "stretch"
+        }}
       />
     )
   }
 
   pricingPackage() {
-    return this.state.packages.map((item, index) => 
+    return this.state.packages.map((item, index) =>
       <PricingCard
         key={index.toString()}
         color={pkg_theme[index]}
         title={pkg_name[index]}
         price={`$${item.price} / ${item.price_type}`}
         info={[item.info]}
-        button={{title: ""}}
-        containerStyle={{width: 230, height: 200}}
-        pricingStyle={{fontSize: 20}}
-        titleStyle={{fontSize: 27}}
+        button={{ title: "" }}
+        containerStyle={{ width: 230, height: 200 }}
+        pricingStyle={{ fontSize: 20 }}
+        titleStyle={{ fontSize: 27 }}
       />
     )
   }
@@ -224,8 +237,8 @@ export default class Details extends React.Component {
         itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
-        price: this.state.details.price,
-        price_type: this.state.details.price_type
+        price: this.state.packages[0].price,
+        price_type: this.state.packages[0].price_type
       })
       .then(() => {
         alert("Listing has been bookmarked!")
@@ -269,18 +282,27 @@ export default class Details extends React.Component {
 
         <ScrollView style={{ height: height * 0.8 }}>
           <View style={styles.container}>
-            <Text style={{ padding: 10, fontSize: 30, fontWeight: "bold", textAlign: "left", alignSelf: "stretch" }}>
+            <Text
+              style={{
+                padding: 10,
+                fontSize: 30,
+                fontWeight: "bold",
+                textAlign: "left",
+                alignSelf: "stretch"
+              }}
+            >
               {this.state.details.title}
             </Text>
 
-            <Swiper 
-            style={{ height: height * 0.3}} 
-            horizontal={true} 
-            showsButtons={true} 
-            containerStyle={{ alignSelf: 'stretch' }}
-            activeDotColor={"white"}
-            loop={false}
-            removeClippedSubviews={false}>
+            <Swiper
+              style={{ height: height * 0.3 }}
+              horizontal={true}
+              showsButtons={true}
+              containerStyle={{ alignSelf: "stretch" }}
+              activeDotColor={"white"}
+              loop={false}
+              removeClippedSubviews={false}
+            >
               {this.showPics()}
             </Swiper>
 
@@ -290,23 +312,25 @@ export default class Details extends React.Component {
               }}
               title={this.state.servicer.username}
               onPress={() => this.linkProfile()}
-              containerStyle={{ width: width * 0.95}}
+              containerStyle={{ width: width * 0.95 }}
               chevron
             />
 
             {/** show package details */}
             <Text style={styles.title}>Package</Text>
-            <ScrollView horizontal={true} style={{flexDirection: "row"}}>
-            {this.pricingPackage()}
+            <ScrollView horizontal={true} style={{ flexDirection: "row" }}>
+              {this.pricingPackage()}
             </ScrollView>
-            
+
             <Text style={styles.info_title}>Description</Text>
             <Text style={styles.description}>
               {this.state.details.description}
             </Text>
 
             {/** show reviews */}
-            <Text style={styles.title}>Reviews ({this.state.reviews.length})</Text>
+            <Text style={styles.title}>
+              Reviews ({this.state.reviews.length})
+            </Text>
             {this.displayReviews()}
           </View>
         </ScrollView>
@@ -321,7 +345,7 @@ export default class Details extends React.Component {
             disabled={this.state.disabled_btn}
             onPress={() => this.pendingService()}
           />
-          
+
           <Button
             containerStyle={{ width: width * 0.2 }}
             type="clear"
@@ -359,18 +383,18 @@ const styles = StyleSheet.create({
     height: 10
   },
   title: {
-    marginLeft: 20, 
-    fontSize: 15, 
-    fontWeight: "bold", 
-    color: "grey", 
+    marginLeft: 20,
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "grey",
     alignSelf: "stretch"
   },
   info_title: {
     marginTop: 10,
-    marginLeft: 20, 
-    fontSize: 15, 
-    fontWeight: "bold", 
-    color: "black", 
+    marginLeft: 20,
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "black",
     alignSelf: "stretch"
   }
 })
