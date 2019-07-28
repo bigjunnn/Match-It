@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { YellowBox } from 'react-native'
 import Setup from './app/setup'
 import firebase from 'firebase'
 
@@ -15,6 +16,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 
 export default class App extends Component {
+  constructor () {
+    super()
+    YellowBox.ignoreWarnings(['Setting a timer'])
+  }
   render () {
     return <Setup />
   }

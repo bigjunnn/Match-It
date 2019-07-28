@@ -15,10 +15,6 @@ import {
   Button
 } from "react-native-elements"
 import firebase from "firebase"
-import {
-  TouchableOpacity,
-  TouchableHighlight
-} from "react-native-gesture-handler"
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -28,9 +24,13 @@ export default class ChatLog extends React.Component {
     this.state = {
       pending: [],
       bookings: [],
-      selectedIndex: 0
+      services: [],
+      ratings: [],
+      selectedIndex: 0,
+      activeIndex: 0
     }
     this.updateIndex = this.updateIndex.bind(this)
+    this.updateActiveIndex = this.updateActiveIndex.bind(this)
   }
 
   keyExtractor = (item, index) => index.toString()
@@ -39,16 +39,64 @@ export default class ChatLog extends React.Component {
     this.setState({ selectedIndex })
   }
 
-  renderSection() {
-    if (this.state.selectedIndex == 0) {
-      //Bookings
+  updateActiveIndex(selectedIndex) {
+    this.setState({ activeIndex: selectedIndex })
+  }
+
+  renderSubSection() {
+    if (this.state.activeIndex == 0) {
       return (
         <FlatList
           data={this.state.bookings}
           keyExtractor={this.keyExtractor}
           renderItem={({ item }) =>
             <ListItem
-              style={{ width: width * 0.9 }}
+              style={{ width: width * 0.9, alignSelf: "center" }}
+              leftAvatar={{
+                size: "medium",
+                rounded: false,
+                source: { uri: item.itempic }
+              }}
+              title={`${item.itemname}`}
+              subtitle={`Servicer: ${item.servicer_name}`}
+            />}
+        />
+      )
+    } else if (this.state.activeIndex == 1) {
+      return (
+        <FlatList
+          data={this.state.services}
+          keyExtractor={this.keyExtractor}
+          renderItem={({ item }) =>
+            <ListItem
+              style={{ width: width * 0.9, alignSelf: "center" }}
+              leftAvatar={{
+                size: "medium",
+                rounded: false,
+                source: { uri: item.itempic }
+              }}
+              title={`${item.itemname}`}
+              subtitle={`Servicer: ${item.servicer_name}`}
+              rightElement={
+                <View style={{ flexDirection: "row", width: width * 0.25 }}>
+                  <Button
+                    title="Complete"
+                    type="outline"
+                    onPress={() => this.acknowledgeBooking(item.key)}
+                  />
+                </View>
+              }
+            />}
+        />
+      )
+    } else if (this.state.activeIndex == 2) {
+      return (
+        <FlatList
+          data={this.state.ratings}
+          keyExtractor={this.keyExtractor}
+          renderItem={({ item }) =>
+            <ListItem
+              style={{ width: width * 0.9, alignSelf: "center" }}
               leftAvatar={{
                 size: "medium",
                 rounded: false,
@@ -58,30 +106,39 @@ export default class ChatLog extends React.Component {
               subtitle={`Servicer: ${item.servicer_name}`}
               rightElement={
                 <View style={{ flexDirection: "row", width: width * 0.18 }}>
-                  {/* <Icon //PM servicer
-	                    name="message"
-	                    size={30}
-	                    containerStyle={{ padding: 8 }}
-	                    onPress={() =>
-	                      this.props.navigation.navigate("Chat", {
-	                        ref: item.servicer_id,
-	                        ref_name: item.servicer_name
-	                      })}
-	                  /> */}
-
                   <Button
                     title="Rate"
                     type="outline"
                     onPress={() =>
                       this.props.navigation.navigate("Review", {
                         ref: item.itemid,
-                        servicer_id: item.servicer_id
+                        servicer_id: item.servicer_id,
+                        review_key: item.key
                       })}
                   />
                 </View>
               }
             />}
         />
+      )
+    }
+  }
+
+  renderSection() {
+    if (this.state.selectedIndex == 0) {
+      // Bookings
+      const buttons = ["Your Bookings", "Acknowledge", "Rating"]
+      return (
+        <View>
+          <ButtonGroup
+            onPress={this.updateActiveIndex}
+            selectedIndex={this.state.activeIndex}
+            buttons={buttons}
+            containerStyle={styles.innerTabBar}
+          />
+
+          {this.renderSubSection()}
+        </View>
       )
     } else if (this.state.selectedIndex == 1) {
       //Pending
@@ -118,19 +175,6 @@ export default class ChatLog extends React.Component {
                     containerStyle={{ padding: 5 }}
                     onPress={() => this.removePending(item.key)}
                   />
-
-                  {/* <Icon //PM requester
-                    name="message"
-                    size={20}
-                    containerStyle={{ padding: 5 }}
-                    onPress={() =>
-                        this.createChat(
-                        item.servicer_id,
-                        item.servicer_name,
-                        item.request_id,
-                        item.request_name
-                        )}
-                    /> */}
                 </View>
               }
             />}
@@ -219,6 +263,56 @@ export default class ChatLog extends React.Component {
     })
   }
 
+  showYourServices() {
+    let user = firebase.auth().currentUser
+    var query = firebase
+      .database()
+      .ref("Booking")
+      .child("Confirmed")
+      .orderByChild("servicer_id")
+      .equalTo(user.uid)
+    query.on("value", snapshot => {
+      var items = []
+      snapshot.forEach(child => {
+        items.push({
+          key: child.key,
+          itemid: child.val().itemid,
+          servicer_id: child.val().servicer_id,
+          servicer_name: child.val().servicer_name,
+          itempic: child.val().itempic,
+          itemname: child.val().itemname,
+          createdAt: child.val().createdAt
+        })
+      })
+      this.setState({ services: items })
+    })
+  }
+
+  showYourRatings() {
+    let user = firebase.auth().currentUser
+    var query = firebase
+      .database()
+      .ref("Booking")
+      .child("Rating")
+      .orderByChild("request_id")
+      .equalTo(user.uid)
+    query.on("value", snapshot => {
+      var items = []
+      snapshot.forEach(child => {
+        items.push({
+          key: child.key,
+          itemname: child.val().itemname,
+          itemid: child.val().itemid,
+          servicer_id: child.val().servicer_id,
+          servicer_name: child.val().servicer_name,
+          itempic: child.val().itempic,
+          createdAt: child.val().createdAt
+        })
+      })
+      this.setState({ ratings: items })
+    })
+  }
+
   //remove pending of service - upon accept/ reject
   removePending(key) {
     firebase.database().ref("Booking").child("Pending").child(key).remove()
@@ -242,6 +336,27 @@ export default class ChatLog extends React.Component {
             alert("Booking Confirmed!")
           })
       })
+  }
+
+  acknowledgeBooking(key) {
+    firebase
+      .database()
+      .ref("Booking")
+      .child("Confirmed")
+      .child(key)
+      .on("value", snapshot => {
+        let rating_ref = firebase.database().ref("Booking").child("Rating")
+        rating_ref
+          .push(snapshot.val())
+          .then(() => this.removeFromBooking(key))
+          .then(() => {
+            alert("You have acknowledged this booking!")
+          })
+      })
+  }
+
+  removeFromBooking(key) {
+    firebase.database().ref("Booking").child("Confirmed").child(key).remove()
   }
 
   // Opens a specific chat, based on chateeName
@@ -284,6 +399,8 @@ export default class ChatLog extends React.Component {
     this.showPending()
     this.showBooking()
     this.showChats()
+    this.showYourServices()
+    this.showYourRatings()
   }
 
   render() {
@@ -327,6 +444,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: width * 0.9,
     marginTop: 10
+  },
+  innerTabBar: {
+    justifyContent: "space-around",
+    alignSelf: "center",
+    width: width * 0.9,
+    marginTop: 10,
+    flexDirection: "row",
+    borderBottomWidth: 1
   },
   chats: {
     flex: 1,

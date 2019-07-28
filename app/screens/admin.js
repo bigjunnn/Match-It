@@ -75,10 +75,21 @@ export default class Home extends React.Component {
     alert("You have rejected this skill submission")
   }
 
+  handleSignOut = () => {
+    firebase.auth().signOut().then(this.props.navigation.navigate("Login"))
+  }
+
   render() {
     return (
       <View>
         <Header
+          leftComponent={
+            <Icon
+              name="sc-telegram"
+              type="evilicon"
+              onPress={this.handleSignOut}
+            />
+          }
           centerComponent={{
             text: "Admin Approvals",
             style: { fontSize: 30, fontFamily: "Lobster-Regular" }

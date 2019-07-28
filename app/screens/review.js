@@ -17,6 +17,7 @@ export default class Ratings extends React.Component {
     user: firebase.auth().currentUser,
     servicer_id: this.props.navigation.state.params.servicer_id, //servicer_id
     item_key: this.props.navigation.state.params.ref, //item id,
+    review_key: this.props.navigation.state.params.review_key, //review_key
     service_rate: 3,
     service_review: "",
     provider_rate: 3,
@@ -70,8 +71,14 @@ export default class Ratings extends React.Component {
           })
       })
 
+    this.removingRating(this.state.review_key)
+
     alert("Review Submitted!")
     this.props.navigation.navigate("Inbox")
+  }
+
+  removingRating(key) {
+    firebase.database().ref("Booking").child("Rating").child(key).remove()
   }
 
   displayForm() {
