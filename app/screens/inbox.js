@@ -164,7 +164,7 @@ export default class ChatLog extends React.Component {
                     color="green"
                     size={20}
                     containerStyle={{ padding: 5 }}
-                    onPress={() => this.acceptBooking(item.key)}
+                    onPress={() => this.acceptBooking(item.key, item.itemid)}
                   />
 
                   <Icon //reject request
@@ -230,6 +230,7 @@ export default class ChatLog extends React.Component {
           request_id: child.val().request_id,
           request_name: child.val().request_name,
           itempic: child.val().itempic,
+          itemid: child.val().itemid,
           itemname: child.val().itemname,
           createdAt: child.val().createdAt
         })
@@ -319,7 +320,12 @@ export default class ChatLog extends React.Component {
   }
 
   // confirm booking of service - accept
-  acceptBooking(key) {
+  acceptBooking(key, itemid) {
+    firebase.firestore().collection("Listing").doc(itemid)
+      .update({
+        sales: firebase.firestore.FieldValue.increment(1)
+      })
+
     firebase
       .database()
       .ref("Booking")

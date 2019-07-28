@@ -25,50 +25,92 @@ export default class Ratings extends React.Component {
   }
 
   submitReview() {
+    this.updateUserRating()
+      .then(() => this.updateUserLog())
+      .then(() => this.updateListingLog())
+      .then(() => this.updateListingRating())
+      .then(() => {
+        alert("Review Submitted!")
+        this.props.navigation.navigate("Inbox")
+      })
+  }
+
+  updateListingLog() {
     let list_ref = firebase
       .database()
       .ref("Review/Listing")
       .child(this.state.item_key)
-    list_ref.push({
+    return list_ref.push({
       reviewer_id: this.state.user.uid,
       reviewer_name: this.state.user.displayName,
       service_rate: this.state.service_rate,
       service_review: this.state.service_review
     })
+  }
 
+  updateListingRating() {
+    let ref = firebase
+      .firestore()
+      .collection("Listing")
+      .doc(this.state.item_key)
+    let FieldValue = firebase.firestore.FieldValue
+    return ref
+      .update({
+        review_count: FieldValue.increment(1),
+        review_stars: FieldValue.increment(this.state.service_rate)
+      })
+      .then(() => {
+        return ref.get()
+      })
+      .then(doc => {
+        let avg = doc.data().review_stars / doc.data().review_count
+        ref.update({
+          review_overall: avg
+        })
+      })
+  }
+
+  updateUserLog() {
     let user_ref = firebase
       .database()
       .ref("Review/Users")
       .child(this.state.servicer_id)
-    user_ref
-      .push({
-        reviewer_id: this.state.user.uid,
-        reviewer_name: this.state.user.displayName,
-        provider_rate: this.state.provider_rate,
-        provider_review: this.state.provider_review
+
+    return user_ref.push({
+      reviewer_id: this.state.user.uid,
+      reviewer_name: this.state.user.displayName,
+      provider_rate: this.state.provider_rate,
+      provider_review: this.state.provider_review
+    })
+  }
+
+  updateUserRating() {
+    let info = firebase
+      .database()
+      .ref("Users")
+      .child(this.state.servicer_id)
+      .child("review")
+
+    var count = 0
+    var total_stars = 0
+
+    return info
+      .once("value")
+      .then(snapshot => {
+        if (snapshot.exists()) {
+          count = snapshot.val().count
+          total_stars = snapshot.val().total_stars
+        }
       })
       .then(() => {
-        let info = firebase
-          .database()
-          .ref("Users")
-          .child(this.state.servicer_id)
-          .child("review")
-        var count = 0
-        var total_stars = 0
-        info
-          .once("value")
-          .then(snapshot => {
-            if (snapshot.exists()) {
-              count = snapshot.val().count
-              total_stars = snapshot.val().total_stars
-            }
-          })
-          .then(() => {
-            info.update({
-              count: count + 1,
-              total_stars: total_stars + this.state.provider_rate
-            })
-          })
+        count += 1
+        total_stars += this.state.provider_rate
+        let avg = total_stars / count
+        info.update({
+          count: count,
+          total_stars: total_stars,
+          overall_rate: avg
+        })
       })
 
     this.removingRating(this.state.review_key)

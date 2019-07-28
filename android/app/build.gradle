@@ -139,8 +139,8 @@ android {
 }
 
 dependencies {
-    implementation project(':@react-native-community_viewpager')
     implementation project(':react-native-image-crop-picker')
+    implementation project(':@react-native-community_viewpager')
     implementation project(':rn-fetch-blob')
     implementation project(':react-native-firebase')
     implementation project(':react-native-vector-icons')

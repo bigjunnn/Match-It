@@ -180,12 +180,6 @@ class ServicerProfile extends React.Component {
       //SKILLS
       return (
         <View style={styles.skillsContainer}>
-          <Button
-            title="Add a skill"
-            type="solid"
-            onPress={() => this.props.navigation.navigate("Skill")}
-          />
-
           <FlatList
             style={styles.fl}
             data={this.state.skills}
