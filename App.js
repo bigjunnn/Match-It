@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Setup from './app/setup'
 import firebase from 'firebase'
+var algoliasearch = require('algoliasearch/reactnative');
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCeTPvZQ26zTVRfeuKdOR42X354WpGjDpQ',
@@ -11,11 +12,16 @@ const firebaseConfig = {
   messagingSenderId: '305054251069',
   appId: '1:305054251069:web:a1fd702d886323ea'
 }
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig)
+
+var algolia = algoliasearch('8KZO6PN2AS', '895e84f4ba2a65f489107006009abc4f');
+const index = algolia.initIndex('Listing')
 
 export default class App extends Component {
   render () {
     return <Setup />
   }
 }
+

@@ -21,7 +21,9 @@ import reviewScreen from './screens/review'
 import bookmarkScreen from './screens/bookmark'
 import skillScreen from './screens/skills'
 import adminScreen from './screens/admin'
-import skillDetailsScreen from './screens/skill_details'
+import searchScreen from './screens/search'
+import categoryScreen from './screens/category'
+import listScreen from './screens/list'
 
 const BottomTabNavigator = createBottomTabNavigator(
   {
@@ -150,8 +152,20 @@ const AppStackNavigator = createStackNavigator(
         }
       })
     },
-    SkillDetails: {
-      screen: skillDetailsScreen,
+    Search: {
+      screen: searchScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    Category: {
+      screen: categoryScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    List: {
+      screen: listScreen,
       navigationOptions: () => ({
         header: null
       })

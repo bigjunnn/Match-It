@@ -8,6 +8,19 @@ export default class Login extends React.Component {
   // Define state
   state = { email: "", password: "", errorMessage: "" }
 
+  // Remain signed in
+  componentDidMount() {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user != null) {
+        if (user.uid == "CGIx1TmGQqYajo5jn7WXiiGvwrx2") {
+          this.props.navigation.navigate("Admin")
+        } else {
+          this.props.navigation.navigate("Home")
+        }
+      }
+    })
+  }
+
   // Method to handle Login
   handleLogin = () => {
     firebase
@@ -24,16 +37,16 @@ export default class Login extends React.Component {
         }
       })
 
-    var userf = firebase.auth().currentUser
-    if (userf != null) {
-      if (userf.uid == "CGIx1TmGQqYajo5jn7WXiiGvwrx2") {
-        this.props.navigation.navigate("Admin")
-      } else {
-        this.props.navigation.navigate("Home")
+    // Checking whether a user is logged in
+    firebase.auth().onAuthStateChanged(user => {
+      if (user != null) {
+        if (user.uid == "CGIx1TmGQqYajo5jn7WXiiGvwrx2") {
+          this.props.navigation.navigate("Admin")
+        } else {
+          this.props.navigation.navigate("Home")
+        }
       }
-    } else {
-      this.props.navigation.navigate("Login")
-    }
+    })
   }
 
   render() {

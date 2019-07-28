@@ -22,6 +22,7 @@ import RNFetchBlob from "rn-fetch-blob"
 import SectionedMultiSelect from "react-native-sectioned-multi-select"
 import TagInput from "react-native-tag-input"
 import Swiper from "react-native-swiper"
+import algoliasearch from 'algoliasearch/reactnative'
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -54,6 +55,24 @@ export default class Create extends React.Component {
 
   componentDidMount() {
     this.loadCategory()
+  }
+
+  resetFields() {
+    this.setState({
+      type: 1,
+      title: "",
+      photo: [],
+      tag: "",
+      package: [{price: "", price_type: "", info: ""}],
+      description: "",
+      items: [],
+      selectedItems: [],
+      tags: [],
+      text: "",
+      errors: "",
+      disableAdd: false,
+      disableMinus: true
+    })
   }
 
   loadCategory() {
@@ -160,10 +179,12 @@ export default class Create extends React.Component {
   }
 
   updateTags() {
-    let ref = firebase.firestore().collection('Tags').doc('General')
+    let ref = firebase.firestore().collection('Tags')
     let FieldValue = firebase.firestore.FieldValue
     this.state.tags.forEach((item) => {
-      ref.update(item, FieldValue.increment(1))
+      ref.doc(item).update({
+        value: FieldValue.increment(1)  
+      })
     })
   }
 
@@ -180,12 +201,32 @@ export default class Create extends React.Component {
       category: this.state.selectedItems[0],
       tags: this.state.tags,
       package: this.state.package,
-      description: this.state.description
+      description: this.state.description,
+      sales: 0,
+      price: parseInt(this.state.package[0].price, 10)
     }).then(() => {
-      this.uploadImages(ref.id)
+      this.uploadImages(ref.id, () => this.updateAlgolia(ref.id))
     }).then(() => {
       this.updateTags()
     })
+  }
+
+  updateAlgolia(key) {
+    var client = algoliasearch('8KZO6PN2AS', '895e84f4ba2a65f489107006009abc4f')
+    const index = client.initIndex('Listing')
+
+    window = undefined
+    firebase.firestore().collection('Listing').doc(key)
+      .get().then(doc => {
+        let records = []
+        const childKey = doc.id
+        const childData = doc.data()
+        // set Algolia objectID as Firebase .key
+        childData.objectID = childKey
+        records.push(childData)
+        // Add or update new objects to Algolia
+        index.saveObjects(records)
+      })
   }
 
   uploadImage(image, image_name, listingKey) {
@@ -223,7 +264,7 @@ export default class Create extends React.Component {
     })
   }
 
-  async uploadImages(listingKey) {
+  async uploadImages(listingKey, callback) {
     const uploadImagePromises = this.state.photo.map((img, index) => this.uploadImage(img, "image_" + index ,listingKey))
     const url = await Promise.all(uploadImagePromises)
     let urls = url
@@ -232,12 +273,15 @@ export default class Create extends React.Component {
       arr.push(url)
       urls = arr
     }
+    
     firebase.firestore().collection('Listing').doc(listingKey)
     .update({ photo: urls })
     .then(() => {
+      this.resetFields()
       alert("Your Listing has been uploaded to the marketplace!")
       this.props.navigation.navigate("Home")
     })
+    callback()
   }
 
   updateRef(name, ref) {

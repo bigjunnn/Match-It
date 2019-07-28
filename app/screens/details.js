@@ -8,7 +8,6 @@ import {
   ScrollView,
   FlatList
 } from "react-native"
-import { Title, Subtitle, H1 } from "native-base"
 import {
   Icon,
   ListItem,
@@ -60,7 +59,7 @@ export default class Details extends React.Component {
         request_name: user.displayName,
         servicer_id: this.state.servicer.userid,
         servicer_name: this.state.servicer.username,
-        itempic: this.state.details.photo,
+        itempic: this.state.photos[0],
         itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP
@@ -296,18 +295,18 @@ export default class Details extends React.Component {
             />
 
             {/** show package details */}
-            <Card containerStyle={{height: 270}}>
             <Text style={styles.title}>Package</Text>
             <ScrollView horizontal={true} style={{flexDirection: "row"}}>
             {this.pricingPackage()}
             </ScrollView>
-            </Card>
-
+            
+            <Text style={styles.info_title}>Description</Text>
             <Text style={styles.description}>
               {this.state.details.description}
             </Text>
 
             {/** show reviews */}
+            <Text style={styles.title}>Reviews ({this.state.reviews.length})</Text>
             {this.displayReviews()}
           </View>
         </ScrollView>
@@ -343,21 +342,17 @@ const styles = StyleSheet.create({
   },
   description: {
     padding: 10,
-    marginTop: 10,
     alignItems: "center",
     justifyContent: "center",
     fontSize: 17,
     width: width * 0.9,
-    height: height * 0.3
+    height: 170
   },
   bottomBtn: {
     flexDirection: "row",
     bottom: 0,
     justifyContent: "center",
     alignItems: "center"
-  },
-  fl: {
-    marginTop: 20
   },
   bthnHide: {
     width: 10,
@@ -368,6 +363,14 @@ const styles = StyleSheet.create({
     fontSize: 15, 
     fontWeight: "bold", 
     color: "grey", 
+    alignSelf: "stretch"
+  },
+  info_title: {
+    marginTop: 10,
+    marginLeft: 20, 
+    fontSize: 15, 
+    fontWeight: "bold", 
+    color: "black", 
     alignSelf: "stretch"
   }
 })
