@@ -117,6 +117,15 @@ export default class Details extends React.Component {
     )
   }
 
+  chatID = (id1, id2, itemID) => {
+    const chatIDpre = []
+    chatIDpre.push(id1)
+    chatIDpre.push(id2)
+    chatIDpre.push(itemID)
+    chatIDpre.sort()
+    return chatIDpre.join("_")
+  }
+
   // Creates a reference under "Chats" in db, for both parties
   createChat(
     useruid,
@@ -127,26 +136,38 @@ export default class Details extends React.Component {
     itemphoto,
     itemtitle
   ) {
-    let chatRef = firebase.database().ref("Chats").child(useruid)
-    chatRef.push({
-      chateeID: chateeuid,
-      chateeName: chateename,
-      itemID: itemid,
-      itemtitle: itemtitle,
-      itemPhoto: itemphoto
-    })
-    let newChatRef = firebase.database().ref("Chats").child(chateeuid)
-    newChatRef.push({
-      chateeID: useruid,
-      chateeName: username,
-      itemID: itemid,
-      itemPhoto: itemphoto,
-      itemtitle: itemtitle
-    })
-    this.props.navigation.navigate("Chat", {
-      ref: chateeuid,
-      ref_name: chateename,
-      ref_itemID: itemid
+    var chatID = this.chatID(useruid, chateeuid, itemid)
+    let ref = firebase.database().ref("Messages").child(chatID)
+    ref.once("value").then(snapshot => {
+      if (snapshot.exists()) {
+        this.props.navigation.navigate("Chat", {
+          ref: chateeuid,
+          ref_name: chateename,
+          ref_itemID: itemid
+        })
+      } else {
+        let chatRef = firebase.database().ref("Chats").child(useruid)
+        chatRef.push({
+          chateeID: chateeuid,
+          chateeName: chateename,
+          itemID: itemid,
+          itemtitle: itemtitle,
+          itemPhoto: itemphoto
+        })
+        let newChatRef = firebase.database().ref("Chats").child(chateeuid)
+        newChatRef.push({
+          chateeID: useruid,
+          chateeName: username,
+          itemID: itemid,
+          itemPhoto: itemphoto,
+          itemtitle: itemtitle
+        })
+        this.props.navigation.navigate("Chat", {
+          ref: chateeuid,
+          ref_name: chateename,
+          ref_itemID: itemid
+        })
+      }
     })
   }
 

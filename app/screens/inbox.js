@@ -43,6 +43,60 @@ export default class ChatLog extends React.Component {
     this.setState({ activeIndex: selectedIndex })
   }
 
+  chatID = (id1, id2, itemID) => {
+    const chatIDpre = []
+    chatIDpre.push(id1)
+    chatIDpre.push(id2)
+    chatIDpre.push(itemID)
+    chatIDpre.sort()
+    return chatIDpre.join("_")
+  }
+
+  // Creates a reference under "Chats" in db, for both parties
+  createChat(
+    useruid,
+    username,
+    chateeuid,
+    chateename,
+    itemid,
+    itemphoto,
+    itemtitle
+  ) {
+    var chatID = this.chatID(useruid, chateeuid, itemid)
+    let ref = firebase.database().ref("Messages").child(chatID)
+    ref.once("value").then(snapshot => {
+      if (snapshot.exists()) {
+        this.props.navigation.navigate("Chat", {
+          ref: chateeuid,
+          ref_name: chateename,
+          ref_itemID: itemid
+        })
+      } else {
+        let chatRef = firebase.database().ref("Chats").child(useruid)
+        chatRef.push({
+          chateeID: chateeuid,
+          chateeName: chateename,
+          itemID: itemid,
+          itemtitle: itemtitle,
+          itemPhoto: itemphoto
+        })
+        let newChatRef = firebase.database().ref("Chats").child(chateeuid)
+        newChatRef.push({
+          chateeID: useruid,
+          chateeName: username,
+          itemID: itemid,
+          itemPhoto: itemphoto,
+          itemtitle: itemtitle
+        })
+        this.props.navigation.navigate("Chat", {
+          ref: chateeuid,
+          ref_name: chateename,
+          ref_itemID: itemid
+        })
+      }
+    })
+  }
+
   renderSubSection() {
     if (this.state.activeIndex == 0) {
       return (
@@ -59,6 +113,24 @@ export default class ChatLog extends React.Component {
               }}
               title={`${item.itemname}`}
               subtitle={`Servicer: ${item.servicer_name}`}
+              rightElement={
+                <View style={{ flexDirection: "row", width: width * 0.25 }}>
+                  <Button
+                    title="Chat"
+                    type="outline"
+                    onPress={() =>
+                      this.createChat(
+                        firebase.auth().currentUser.uid,
+                        firebase.auth().currentUser.displayName,
+                        item.servicer_id,
+                        item.servicer_name,
+                        item.itemid,
+                        item.itempic,
+                        item.itemname
+                      )}
+                  />
+                </View>
+              }
             />}
         />
       )
