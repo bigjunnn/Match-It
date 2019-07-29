@@ -226,6 +226,9 @@ export default class Create extends React.Component {
         records.push(childData)
         // Add or update new objects to Algolia
         index.saveObjects(records)
+      }).then(() => {
+        alert("Your Listing has been uploaded to the marketplace!")
+        this.props.navigation.navigate("Home")
       })
   }
 
@@ -278,10 +281,8 @@ export default class Create extends React.Component {
     .update({ photo: urls })
     .then(() => {
       this.resetFields()
-      alert("Your Listing has been uploaded to the marketplace!")
-      this.props.navigation.navigate("Home")
+      callback()
     })
-    callback()
   }
 
   updateRef(name, ref) {
@@ -348,7 +349,7 @@ export default class Create extends React.Component {
             style={{width: 70}}
           />
 
-          <Text>  /  </Text>
+          <View style={styles.separator} />
 
           <TextInput
             placeholder="Rate"
@@ -568,14 +569,14 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   pkg_price: {
-    height: 35,
     flexDirection:'row',
     borderWidth: 1,
     borderRadius: 3,
     borderColor: "grey",
     padding: 5,
     marginBottom: 5,
-    width: 160
+    width: 160,
+    fontSize: 13
   },
   pkg_info: {
     borderWidth: 1,
@@ -584,5 +585,10 @@ const styles = StyleSheet.create({
     padding: 5,
     height: 70,
     width: 160
+  },
+  separator: {
+    borderRightWidth: 0.5,
+    borderColor: 'black',
+    marginRight: 10
   }
 })

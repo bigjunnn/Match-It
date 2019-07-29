@@ -116,7 +116,7 @@ export default class Chat extends React.Component {
             text: `${this.state.partyname}`,
             style: { fontSize: 20, fontWeight: "bold" }
           }}
-          backgroundColor="#e6ebed"
+          backgroundColor="white"
         />
 
         <GiftedChat

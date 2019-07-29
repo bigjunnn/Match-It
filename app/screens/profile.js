@@ -101,7 +101,7 @@ class Profile extends React.Component {
           })
           sales += doc.data().sales
         })
-        this.setState({ listings: items, refreshing: false })
+        this.setState({ listings: items, refreshing: false, sales: sales })
       })
   }
 

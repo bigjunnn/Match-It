@@ -149,31 +149,6 @@ export default class Register extends React.Component {
           </Item>
         </Form>
 
-        <View style={styles.terms}>
-          <Text style={{ fontSize: 12 }}>
-            {" "}By signing up, you agree to our
-            <Text
-              style={{ opacity: 0.7, fontWeight: "bold", fontSize: 12.5 }}
-              onPress={() => Linking.openURL("https://google.com")}
-            >
-              {" "}Terms
-            </Text>,
-            <Text
-              style={{ opacity: 0.7, fontWeight: "bold", fontSize: 12.5 }}
-              onPress={() => Linking.openURL("https://google.com")}
-            >
-              {" "}Data Policy{" "}
-            </Text>{" "}
-            and
-            <Text
-              style={{ opacity: 0.7, fontWeight: "bold", fontSize: 12.5 }}
-              onPress={() => Linking.openURL("https://google.com")}
-            >
-              {" "}Cookies Policy{" "}
-            </Text>
-          </Text>
-        </View>
-
         <View style={styles.loginDirect}>
           <Text style={{ fontSize: 12 }}>
             {" "}Already have an account?

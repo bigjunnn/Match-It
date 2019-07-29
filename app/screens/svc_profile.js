@@ -5,15 +5,23 @@ import {
   Button,
   View,
   FlatList,
-  TouchableOpacity,
   Dimensions,
   ScrollView,
   RefreshControl
 } from "react-native"
-import { Title, Subtitle } from "native-base"
-import { Header, Avatar, Rating, ListItem, Icon } from "react-native-elements"
+import { Header, Avatar, Rating, ListItem} from "react-native-elements"
 import firebase from "firebase"
 import { withNavigation } from "react-navigation"
+import { Dropdown } from 'react-native-material-dropdown'
+import { InstantSearch, Configure } from 'react-instantsearch-native'
+import SearchBox from './src/SearchBox'
+import Results from './src/InfiniteHits'
+
+const dropdown = [
+  {value: 'date', label:'Date'},
+  {value: 'sales', label:'Sales'},
+  {value: 'price', label:'Price'}
+]
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -26,8 +34,24 @@ class ServicerProfile extends React.Component {
     description: "",
     review_stars: 0.0,
     review_count: 0,
-    reviews: [],
-    refreshing: false
+    skills: [],
+    refreshing: false,
+    sales: 0,
+    text: "listing",
+    orderType: "date",
+    order: "desc",
+    orderIndex: 1
+  }
+
+  changeOrder() {
+    switch(this.state.orderIndex) {
+      case 1: 
+        this.setState({order: "desc"})
+        break;
+      case 2: 
+        this.setState({order: "asc"})
+        break;
+    }
   }
 
   keyExtractor = (item, index) => index.toString()
@@ -55,6 +79,7 @@ class ServicerProfile extends React.Component {
     firebase.firestore().collection('Listing').where('userid', '==', servicer)
       .get().then(snapshot => {
         var items = []
+        var sales = 0
         snapshot.forEach(doc => {
           items.push({
             key: doc.data().id,
@@ -63,8 +88,9 @@ class ServicerProfile extends React.Component {
             price_type: doc.data().package[0].price_type,
             photo: doc.data().photo[0]
           })
+          sales += doc.data().sales
         })
-        this.setState({ listings: items, refreshing: false })
+        this.setState({ listings: items, refreshing: false, sales: sales })
       })
   }
 
@@ -122,31 +148,51 @@ class ServicerProfile extends React.Component {
     if (this.state.activeIndex == 0) {
       //SERVICES
       return (
-        <FlatList
-          style={styles.fl}
-          data={this.state.listings}
-          keyExtractor={this.keyExtractor}
-          renderItem={({ item }) =>
-            <TouchableOpacity
-              onPress={() =>
-                this.props.navigation.navigate("Details", { ref: item.key })}
-            >
-              <ListItem
-                leftAvatar={{
-                  size: "large",
-                  rounded: false,
-                  source: { uri: item.photo }
-                }}
-                title={item.title}
-                subtitle={`${item.price} / ${item.price_type}`}
-                style={{ width: width * 0.9 }}
-              />
-            </TouchableOpacity>}
-        />
+        <InstantSearch
+          appId="8KZO6PN2AS"
+          apiKey="3847b33ab120291475be5326b9c1c797"
+          indexName={`${this.state.text}_${this.state.orderType}_${this.state.order}`}
+        >
+          <SearchBox />
+          <View style={{flexDirection:"row", alignSelf: "flex-end", marginRight: 5, marginBottom: 5}}> 
+            <Dropdown 
+              ref={this.state.orderType}
+              data={dropdown}
+              value={this.state.orderType}
+              onChangeText={(value) => {
+                this.setState({orderType: value})
+              }}
+              dropdownOffset={{top: 0, left: 0}}
+              containerStyle={{width: 80, marginRight: 5}}
+              fontSize={14}
+            />
+
+            <Text 
+              onPress={() => { 
+                this.setState({ orderIndex: 1}, () => this.changeOrder()) 
+              }}
+              style={ this.state.orderIndex === 1 ? styles.activeText : styles.inactiveText}
+            > desc</Text>
+            <Text> | </Text>
+            <Text 
+              onPress={() => { 
+                this.setState({ orderIndex: 2}, () => this.changeOrder()) 
+              }}
+              style={ this.state.orderIndex === 2 ? styles.activeText : styles.inactiveText}
+            >asc</Text>
+          </View>
+          <View style={{flexDirection: 'row', alignSelf: 'center', width: width * 0.9, height: height * 0.8}}>
+          <Results />
+          </View>
+          <Configure 
+            facetFilters={`userid:${this.state.servicerid}`}
+          />
+        </InstantSearch>
       )
     } else if (this.state.activeIndex == 1) {
       //REVIEWS
       return (
+        <View style={{width:width * 0.9, alignSelf: 'center'}}>
         <FlatList
           style={styles.fl}
           data={this.state.reviews}
@@ -175,6 +221,7 @@ class ServicerProfile extends React.Component {
               style={{ width: width * 0.9 }}
             />}
         />
+        </View>
       )
     } else if (this.state.activeIndex == 2) {
       //SKILLS
@@ -198,8 +245,8 @@ class ServicerProfile extends React.Component {
                 title={item.skillName}
                 style={{ width: width * 0.9 }}
               />}
-	        />
-	      </View>
+          />
+        </View>
       )
     }
   }
@@ -209,7 +256,7 @@ class ServicerProfile extends React.Component {
     return (
       <View style={styles.container}>
         <Header
-          backgroundColor="white"
+          backgroundColor="#f5f6f7"
           centerComponent={{
             text: `${this.state.servicer.username}`,
             style: { fontSize: 20, fontWeight: "bold" }
@@ -222,68 +269,75 @@ class ServicerProfile extends React.Component {
               refreshing={this.state.refreshing}
               onRefresh={this.onRefresh}
             />
-        }
+          }
         >
-          <View style={{ flexDirection: "row" }}>
-            <View>
-              <Avatar
-                size="xlarge"
-                source={{ uri: user.profilepic}}
-                containerStyle={{ marginTop: 20 }}
+          <View style={styles.info}>
+            <Avatar
+              rounded
+              size={150}
+              source={{ uri: this.state.servicer.profilepic }}
+              containerStyle={{ marginTop: 10, alignSelf: 'center' }}
+              overlayContainerStyle={{borderWidth:2, borderColor:"black"}}
+            />
+            
+            <View style={{ alignSelf: "center", width: width * 0.7, marginTop: 10, marginBottom: 10 }}>
+              <Rating
+                imageSize={20}
+                fractions={1}
+                startingValue={this.state.review_stars}
+                readonly
               />
-            </View>
-
-            <View style={{ flexDirection: "column", justifyContent: "center"}}>
-              <Text style={{ fontSize: 30, padding: 5, fontWeight: "bold" }}>
-                {this.state.servicer.username}
+              <Text style={{ padding: 3, fontSize: 13, fontWeight: 'bold', color: 'black', alignSelf: 'center' }}>
+                {this.state.review_stars.toFixed(1)} / 5.0 ({this.state.review_count})
               </Text>
-              <Subtitle>  </Subtitle>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignContent: "center",
-                  justifyContent: "center"
-                }}
-              >
-                <Rating
-                  imageSize={20}
-                  fractions={1}
-                  startingValue={this.state.review_stars}
-                  readonly
-                />
-                <Text style={{ padding: 3, fontSize: 15 }}>
-                  {this.state.review_stars} ({this.state.review_count})
-                </Text>
+              <Text style={{ marginTop: 10, alignSelf: 'center', fontSize: 13, fontWeight: 'bold', color: "grey"}}>ABOUT ME</Text>
+              <Text style={{ padding: 2, alignSelf: 'center', fontSize: 13, color: "black"}}>
+                {this.state.description !== "" ? this.state.description : "---"}
+              </Text>
+            </View>
+            <View style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'space-around', width: width * 0.9, padding: 10, paddingBottom: 25}}>
+              <View>
+                <Text style={{fontSize: 30, fontWeight: "bold", textAlign: 'center'}}>{this.state.listings.length}</Text>
+                <Text style={{fontSize: 12, color: 'grey'}}>SERVICES</Text>
               </View>
-              <Text style={{ padding: 10 }}>{this.state.description}</Text>
+
+              <View>
+                <Text style={{fontSize: 30, fontWeight: "bold", textAlign: 'center'}}>{this.state.sales}</Text>
+                <Text style={{fontSize: 12, color: 'grey'}}>BOOKED</Text>
+              </View>
+
+              <View>
+                <Text style={{fontSize: 30, fontWeight: "bold", textAlign: 'center'}}>{this.state.skills.length}</Text>
+                <Text style={{fontSize: 12, color: 'grey'}}>SKILLS</Text>
+              </View>
+
+              <View>
+                <Text style={{fontSize: 30, fontWeight: "bold", textAlign: 'center'}}>{this.state.review_count}</Text>
+                <Text style={{fontSize: 12, color: 'grey'}}>REVIEWS</Text>
+              </View>
+
             </View>
           </View>
 
           <View style={styles.tabbar}>
-            <Button
-              onPress={() => this.setState({ activeIndex: 0 })}
-              transparent
-              active={this.state.activeIndex == 0}
-              title="SERVICES"
-              color={this.state.activeIndex == 0 ? "#874036" : "#2f3e66"}
-              back
-            />
-
-            <Button
-              onPress={() => this.setState({ activeIndex: 1 })}
-              transparent
-              active={this.state.activeIndex == 1}
-              title="REVIEWS"
-              color={this.state.activeIndex == 1 ? "#874036" : "#2f3e66"}
-            />
-
-            <Button
-              onPress={() => this.setState({ activeIndex: 2 })}
-              transparent
-              active={this.state.activeIndex == 2}
-              title="SKILLS"
-              color={this.state.activeIndex == 2 ? "#874036" : "#2f3e66"}
-            />
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 0}) 
+              }}
+              style={ this.state.activeIndex === 0 ? styles.activeText : styles.inactiveText}
+            >SERVICES</Text>
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 1})
+              }}
+              style={ this.state.activeIndex === 1 ? styles.activeText : styles.inactiveText}
+            >REVIEWS</Text>
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 2})
+              }}
+              style={ this.state.activeIndex === 2 ? styles.activeText : styles.inactiveText}
+            >SKILLS</Text>
           </View>
 
           {/** tab view */}
@@ -301,22 +355,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center"
   },
-  submit: {
-    opacity: 0.8,
-    marginTop: 120,
-    paddingTop: 10,
-    marginLeft: 90,
-    marginRight: 90
-  },
   fl: {
     marginTop: 20
+  },
+  info: {
+    alignContent: 'center', 
+    justifyContent: 'center', 
+    width: width, 
+    borderBottomWidth: 0.5, 
+    borderColor: '#ebebeb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    backgroundColor: "#f5f6f7"
   },
   tabbar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    alignSelf: "stretch",
-    width: width * 0.9,
-    borderBottomWidth: 1,
-    marginTop: 30
+    alignSelf: "center",
+    width: width,
+    borderBottomWidth: 0.8,
+    padding: 15, 
+    borderColor: '#ebebeb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2
+  },
+  skillsContainer: {
+    marginTop: 20,
+    height: height * 1
+  },
+  activeText: {
+    fontWeight: 'bold',
+    color: "#123145",
+    fontSize: 15
+  },
+  inactiveText: {
+    fontWeight: "normal",
+    color: "#2f3e66",
+    fontSize: 15
   }
 })

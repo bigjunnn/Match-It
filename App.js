@@ -24,6 +24,7 @@ export default class App extends Component {
   constructor () {
     super()
     YellowBox.ignoreWarnings(['Setting a timer'])
+    console.disableYellowBox = true;
   }
   render () {
     return <Setup />

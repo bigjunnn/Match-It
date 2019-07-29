@@ -175,8 +175,8 @@ class Home extends React.Component {
             />
             <Text style={{fontSize: 14, fontWeight: "bold", color: "grey"}}> {item.sales} BOOKED</Text>
           </View>
-          <Text style={{fontSize: 37, fontWeight:"bold", color: "#545252"}}>{item.title}</Text>
-          <Text style={{fontSize: 22}}>From SGD {item.package[0].price} / {item.package[0].price_type}</Text>
+          <Text style={{fontSize: 37, fontWeight:"bold", color: "#545252", textAlign: "center"}}>{item.title}</Text>
+          <Text style={{fontSize: 22, textAlign: "center"}}>From SGD {item.package[0].price} / {item.package[0].price_type}</Text>
           <TouchableOpacity
             style={{flexDirection:"row", opacity: 0.8, backgroundColor: "white", borderColor: "grey", marginTop: 15, borderRadius: 5, borderWidth: 1, padding: 5, paddingLeft: 20, paddingRight: 20}} 
             onPress={() =>
@@ -207,7 +207,7 @@ class Home extends React.Component {
         snapshot.forEach(child => {
           topServicer.push(child.val())
         })
-        this.setState({topServicer})
+        this.setState({topServicer: topServicer, refreshing: false})
       })
   }
 

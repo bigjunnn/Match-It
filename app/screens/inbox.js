@@ -15,6 +15,7 @@ import {
   Button
 } from "react-native-elements"
 import firebase from "firebase"
+import algoliasearch from 'algoliasearch/reactnative'
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -114,22 +115,21 @@ export default class ChatLog extends React.Component {
               title={`${item.itemname}`}
               subtitle={`Servicer: ${item.servicer_name}`}
               rightElement={
-                <View style={{ flexDirection: "row", width: width * 0.25 }}>
-                  <Button
-                    title="Chat"
-                    type="outline"
-                    onPress={() =>
-                      this.createChat(
-                        firebase.auth().currentUser.uid,
-                        firebase.auth().currentUser.displayName,
-                        item.servicer_id,
-                        item.servicer_name,
-                        item.itemid,
-                        item.itempic,
-                        item.itemname
-                      )}
-                  />
-                </View>
+                <Icon //PM 
+                  name="message"
+                  size={20}
+                  containerStyle={{ padding: 5 }}
+                  onPress={() =>
+                    this.createChat(
+                      firebase.auth().currentUser.uid,
+                      firebase.auth().currentUser.displayName,
+                      item.servicer_id,
+                      item.servicer_name,
+                      item.itemid,
+                      item.itempic,
+                      item.itemname
+                    )}
+                />
               }
             />}
         />
@@ -150,12 +150,11 @@ export default class ChatLog extends React.Component {
               title={`${item.itemname}`}
               subtitle={`Requester: ${item.request_name}`}
               rightElement={
-                <View style={{ flexDirection: "row", width: width * 0.25 }}>
-                  <Button
-                    title="Complete"
-                    type="outline"
+                <View style={{ flexDirection: "row"}}>
+                  <Text
+                    style={styles.button}
                     onPress={() => this.acknowledgeBooking(item.key)}
-                  />
+                  >Complete</Text> 
                 </View>
               }
             />}
@@ -177,17 +176,16 @@ export default class ChatLog extends React.Component {
               title={`${item.itemname}`}
               subtitle={`Servicer: ${item.servicer_name}`}
               rightElement={
-                <View style={{ flexDirection: "row", width: width * 0.18 }}>
-                  <Button
-                    title="Rate"
-                    type="outline"
+                <View style={{ flexDirection: "row"}}>
+                  <Text
+                    style={styles.button}
                     onPress={() =>
                       this.props.navigation.navigate("Review", {
                         ref: item.itemid,
                         servicer_id: item.servicer_id,
                         review_key: item.key
                       })}
-                  />
+                  >Rate</Text> 
                 </View>
               }
             />}
@@ -199,18 +197,31 @@ export default class ChatLog extends React.Component {
   renderSection() {
     if (this.state.selectedIndex == 0) {
       // Bookings
-      const buttons = ["Your Bookings", "Acknowledge", "Rating"]
       return (
         <View>
-          <ButtonGroup
-            onPress={this.updateActiveIndex}
-            selectedIndex={this.state.activeIndex}
-            buttons={buttons}
-            containerStyle={styles.innerTabBar}
-          />
-
-          {this.renderSubSection()}
+        <View style={styles.bar}>
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 0}) 
+              }}
+              style={ this.state.activeIndex === 0 ? styles.activeText : styles.inactiveText}
+            >Your Bookings</Text>
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 1})
+              }}
+              style={ this.state.activeIndex === 1 ? styles.activeText : styles.inactiveText}
+            >Acknowledge</Text>
+            <Text 
+              onPress={() => { 
+                this.setState({ activeIndex: 2})
+              }}
+              style={ this.state.activeIndex === 2 ? styles.activeText : styles.inactiveText}
+            >Rating</Text>
         </View>
+        <ScrollView>{this.renderSubSection()}</ScrollView>
+        </View>
+
       )
     } else if (this.state.selectedIndex == 1) {
       //Pending
@@ -224,7 +235,7 @@ export default class ChatLog extends React.Component {
               leftAvatar={{
                 size: "medium",
                 rounded: false,
-                source: { uri: item.itempic }
+                source: {uri: item.itempic }
               }}
               title={`${item.itemname}`}
               subtitle={`Requester: ${item.request_name}`}
@@ -246,6 +257,22 @@ export default class ChatLog extends React.Component {
                     size={20}
                     containerStyle={{ padding: 5 }}
                     onPress={() => this.removePending(item.key)}
+                  />
+
+                  <Icon //PM 
+                    name="message"
+                    size={20}
+                    containerStyle={{ padding: 5 }}
+                    onPress={() =>
+                      this.createChat(
+                        firebase.auth().currentUser.uid,
+                        firebase.auth().currentUser.displayName,
+                        item.request_id,
+                        item.request_name,
+                        item.itemid,
+                        item.itempic,
+                        item.itemname
+                      )}
                   />
                 </View>
               }
@@ -269,7 +296,7 @@ export default class ChatLog extends React.Component {
               title={`${item.itemtitle}`}
               subtitle={`Chat with ${item.chateeName}`}
               rightIcon={
-                <View style={{ flexDirection: "row", width: width * 0.15 }}>
+                <View style={{ flexDirection: "row"}}>
                   <Icon //PM requester
                     name="message"
                     size={20}
@@ -352,6 +379,8 @@ export default class ChatLog extends React.Component {
           itemid: child.val().itemid,
           servicer_id: child.val().servicer_id,
           servicer_name: child.val().servicer_name,
+          request_id: child.val().request_id,
+          request_name: child.val().request_name,
           itempic: child.val().itempic,
           itemname: child.val().itemname,
           createdAt: child.val().createdAt
@@ -395,8 +424,8 @@ export default class ChatLog extends React.Component {
   acceptBooking(key, itemid) {
     firebase.firestore().collection("Listing").doc(itemid).update({
       sales: firebase.firestore.FieldValue.increment(1)
-    })
-
+    }).then(() => this.updateAlgolia(itemid))
+    
     firebase
       .database()
       .ref("Booking")
@@ -412,6 +441,26 @@ export default class ChatLog extends React.Component {
           .then(() => {
             alert("Booking Confirmed!")
           })
+      })
+  }
+
+  updateAlgolia(key) {
+    var client = algoliasearch('8KZO6PN2AS', '895e84f4ba2a65f489107006009abc4f')
+    const index = client.initIndex('Listing')
+
+    window = undefined
+    firebase.firestore().collection("Listing").doc(key)
+      .get().then(doc => {
+        return doc.data().sales
+      }).then(sales => {
+        // update only sales attribute of existing item
+        index.partialUpdateObject({
+          sales: sales,
+          objectID: key
+        }, (err, content) => {
+          if (err) throw err;
+          console.log(content);
+        });
       })
   }
 
@@ -544,5 +593,37 @@ const styles = StyleSheet.create({
   chatText: {
     color: "#1E90FF",
     fontSize: 22
+  },
+  button: {
+    height: 32,
+    borderWidth: 1,
+    borderColor: "#2ba9d9",
+    borderRadius: 6,
+    padding: 7,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#12a7e0",
+    fontSize: 15
+  },
+  bar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignSelf: "center",
+    width: width * 0.9,
+    borderBottomWidth: 0.8,
+    padding: 15, 
+    borderColor: '#ebebeb'
+  },
+  activeText: {
+    fontWeight: 'bold',
+    color: "#123145",
+    fontSize: 14,
+    textAlign: "center"
+  },
+  inactiveText: {
+    fontWeight: "normal",
+    color: "grey",
+    fontSize: 14,
+    textAlign: "center"
   }
 })

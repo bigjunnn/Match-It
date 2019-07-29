@@ -19,6 +19,7 @@ import {
 } from "react-native-elements"
 import firebase from "firebase"
 import Swiper from "react-native-swiper"
+import { DatePicker } from "native-base";
 
 const pkg_name = ["Basic", "Premium", "Exclusive"]
 const pkg_theme = ["#4f9deb", "#d14feb", "#de4759"]
@@ -31,8 +32,9 @@ export default class Details extends React.Component {
     details: "",
     servicer: "",
     photos: [],
-    packages: [{ price: "", price_type: "", info: "" }],
+    packages: [{price: "", price_type: "", info: ""}],
     reviews: [],
+    review_count: 0,
     disabled_btn: true
   }
 
@@ -75,6 +77,8 @@ export default class Details extends React.Component {
       .ref("Review")
       .child("Listing")
       .child(this.state.key)
+      .orderByChild("createdAt")
+      .limitToLast(3)
       .once("value", snapshot => {
         var items = []
         snapshot.forEach(snap => {
@@ -82,6 +86,14 @@ export default class Details extends React.Component {
         })
         this.setState({ reviews: items })
       })
+
+      window = undefined
+      firebase.firestore().collection('Listing').doc(this.state.key)
+        .get().then(doc => {
+          doc.data().review_count !== undefined 
+            ? this.setState({review_count: doc.data().review_count})
+            : null
+        })
   }
 
   displayReviews() {
@@ -105,7 +117,7 @@ export default class Details extends React.Component {
                     readonly
                   />
                   <Text style={{ padding: 3, fontSize: 15 }}>
-                    {item.service_rate}/5
+                    {item.service_rate.toFixed(1)}/5.0
                   </Text>
                 </View>
               </View>
@@ -137,51 +149,47 @@ export default class Details extends React.Component {
     itemtitle
   ) {
     var chatID = this.chatID(useruid, chateeuid, itemid)
-    let ref = firebase.database().ref("Messages").child(chatID)
-    ref.once("value").then(snapshot => {
-      if (snapshot.exists()) {
-        this.props.navigation.navigate("Chat", {
-          ref: chateeuid,
-          ref_name: chateename,
-          ref_itemID: itemid
-        })
-      } else {
-        let chatRef = firebase.database().ref("Chats").child(useruid)
-        chatRef.push({
-          chateeID: chateeuid,
-          chateeName: chateename,
-          itemID: itemid,
-          itemtitle: itemtitle,
-          itemPhoto: itemphoto
-        })
-        let newChatRef = firebase.database().ref("Chats").child(chateeuid)
-        newChatRef.push({
-          chateeID: useruid,
-          chateeName: username,
-          itemID: itemid,
-          itemPhoto: itemphoto,
-          itemtitle: itemtitle
-        })
-        this.props.navigation.navigate("Chat", {
-          ref: chateeuid,
-          ref_name: chateename,
-          ref_itemID: itemid
-        })
-      }
+	    let ref = firebase.database().ref("Messages").child(chatID)
+	    ref.once("value").then(snapshot => {
+	      if (snapshot.exists()) {
+	        this.props.navigation.navigate("Chat", {
+	          ref: chateeuid,
+	          ref_name: chateename,
+	          ref_itemID: itemid
+	        })
+	      } else {
+	        let chatRef = firebase.database().ref("Chats").child(useruid)
+	        chatRef.push({
+	          chateeID: chateeuid,
+	          chateeName: chateename,
+	          itemID: itemid,
+	          itemtitle: itemtitle,
+	          itemPhoto: itemphoto
+	        })
+	        let newChatRef = firebase.database().ref("Chats").child(chateeuid)
+	        newChatRef.push({
+	          chateeID: useruid,
+	          chateeName: username,
+	          itemID: itemid,
+	          itemPhoto: itemphoto,
+	          itemtitle: itemtitle
+	        })
+	        this.props.navigation.navigate("Chat", {
+	          ref: chateeuid,
+	          ref_name: chateename,
+	          ref_itemID: itemid
+	        })
+	      }
     })
   }
 
   renderListingDetail(callback) {
     //get all listings from db in array form
-    firebase
-      .firestore()
-      .collection("Listing")
-      .doc(this.state.key)
-      .get()
+    firebase.firestore().collection("Listing").doc(this.state.key).get()
       .then(doc => {
         if (doc.exists) {
-          this.setState({
-            details: doc.data(),
+          this.setState({ 
+            details: doc.data(), 
             photos: doc.data().photo,
             packages: doc.data().package
           })
@@ -192,18 +200,14 @@ export default class Details extends React.Component {
         }
       })
       .catch(err => {
-        console.log("Error getting documents", err)
+        console.log('Error getting documents', err)
       })
   }
 
   renderServicerDetail() {
     let user = firebase.auth().currentUser
-    firebase
-      .database()
-      .ref("Users")
-      .child(this.state.details.userid)
-      .once("value")
-      .then(snapshot => {
+    firebase.database().ref("Users").child(this.state.details.userid)
+      .once("value").then(snapshot => {
         this.setState({ servicer: snapshot.val() })
 
         if (this.state.details.userid !== user.uid) {
@@ -213,32 +217,26 @@ export default class Details extends React.Component {
   }
 
   showPics() {
-    return this.state.photos.map((value, index) =>
-      <Image
-        key={index}
-        source={{ uri: this.state.photos[index] }}
-        style={{
-          height: height * 0.3,
-          width: width * 1,
-          resizeMode: "stretch"
-        }}
+    return this.state.photos.map((value, index) => 
+      <Image key={index}
+        source={{uri: this.state.photos[index]}}
+        style={{ height: height * 0.3, width: width * 1, resizeMode: 'stretch'}}
       />
     )
   }
 
   pricingPackage() {
-    return this.state.packages.map((item, index) =>
-      <PricingCard
-        key={index.toString()}
-        color={pkg_theme[index]}
-        title={pkg_name[index]}
-        price={`$${item.price} / ${item.price_type}`}
-        info={[item.info]}
-        button={{ title: "" }}
-        containerStyle={{ width: 230, height: 200 }}
-        pricingStyle={{ fontSize: 20 }}
-        titleStyle={{ fontSize: 27 }}
-      />
+    return this.state.packages.map((item, index) => 
+      <View key={index}
+      style={{padding: 10, width: 220, height: 125, borderColor: "grey", margin: 5,
+      shadowColor: `${pkg_theme[index]}`,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      backgroundColor: "white"}}>
+        <Text style={{fontSize: 25, fontWeight: "bold", textAlign: "center", marginBottom: 10, color: `${pkg_theme[index]}` }}>{pkg_name[index]}</Text>
+        <Text style={{fontSize: 20, fontWeight: "100", textAlign: "center"}}>{`$${item.price} / ${item.price_type}`}</Text>
+        <Text style={{fontSize: 14, color: "grey", textAlign: "center", padding: 5}}>{item.info}</Text>
+      </View>
     )
   }
 
@@ -258,8 +256,8 @@ export default class Details extends React.Component {
         itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
-        price: this.state.packages[0].price,
-        price_type: this.state.packages[0].price_type
+        price: this.state.details.price,
+        price_type: this.state.details.price_type
       })
       .then(() => {
         alert("Listing has been bookmarked!")
@@ -303,27 +301,18 @@ export default class Details extends React.Component {
 
         <ScrollView style={{ height: height * 0.8 }}>
           <View style={styles.container}>
-            <Text
-              style={{
-                padding: 10,
-                fontSize: 30,
-                fontWeight: "bold",
-                textAlign: "left",
-                alignSelf: "stretch"
-              }}
-            >
+            <Text style={{ padding: 10, fontSize: 30, fontWeight: "bold", textAlign: "left", alignSelf: "stretch" }}>
               {this.state.details.title}
             </Text>
 
-            <Swiper
-              style={{ height: height * 0.3 }}
-              horizontal={true}
-              showsButtons={true}
-              containerStyle={{ alignSelf: "stretch" }}
-              activeDotColor={"white"}
-              loop={false}
-              removeClippedSubviews={false}
-            >
+            <Swiper 
+            style={{ height: height * 0.3}} 
+            horizontal={true} 
+            showsButtons={true} 
+            containerStyle={{ alignSelf: 'stretch' }}
+            activeDotColor={"white"}
+            loop={false}
+            removeClippedSubviews={false}>
               {this.showPics()}
             </Swiper>
 
@@ -333,25 +322,41 @@ export default class Details extends React.Component {
               }}
               title={this.state.servicer.username}
               onPress={() => this.linkProfile()}
-              containerStyle={{ width: width * 0.95 }}
+              containerStyle={{ width: width * 0.95}}
               chevron
             />
 
             {/** show package details */}
             <Text style={styles.title}>Package</Text>
-            <ScrollView horizontal={true} style={{ flexDirection: "row" }}>
-              {this.pricingPackage()}
+            <ScrollView horizontal={true} style={{flexDirection: "row", marginBottom: 10, marginTop: 5}}>
+            {this.pricingPackage()}
             </ScrollView>
-
-            <Text style={styles.info_title}>Description</Text>
+            
+            <Text style={styles.title}>Information</Text>
             <Text style={styles.description}>
               {this.state.details.description}
             </Text>
 
+            <Text style={{fontSize: 11, fontWeight: "bold", color: "grey", marginTop: 10}}>CATEGORY</Text>
+            <Text style={{fontWeight: "bold", fontSize: 15}}>{this.state.details.category}</Text>
+            
+            <Text style={{fontSize: 11, fontWeight: "bold", color: "grey", marginTop: 10}}>TAGS</Text>
+            <Text>{this.state.details.tags}</Text>
+
+
             {/** show reviews */}
-            <Text style={styles.title}>
-              Reviews ({this.state.reviews.length})
-            </Text>
+            <Text style={styles.title}>Reviews ({this.state.review_count})</Text>
+            {this.state.review_count > 3 
+              ?  <Text 
+                    onPress={() => { 
+                      this.props.navigation.navigate("ReviewList", {
+                        ref: this.state.key
+                      })
+                    }}
+                    style={{ alignSelf: 'flex-end', color: "red", fontWeight: "bold", marginRight: 10}}
+                  > See All</Text>
+              : null
+            }
             {this.displayReviews()}
           </View>
         </ScrollView>
@@ -366,7 +371,7 @@ export default class Details extends React.Component {
             disabled={this.state.disabled_btn}
             onPress={() => this.pendingService()}
           />
-
+          
           <Button
             containerStyle={{ width: width * 0.2 }}
             type="clear"
@@ -390,8 +395,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     fontSize: 17,
-    width: width * 0.9,
-    height: 170
+    width: width * 0.9
   },
   bottomBtn: {
     flexDirection: "row",
@@ -404,18 +408,28 @@ const styles = StyleSheet.create({
     height: 10
   },
   title: {
-    marginLeft: 20,
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "grey",
-    alignSelf: "stretch"
+    marginTop: 5,
+    padding: 7,
+    fontSize: 20, 
+    fontWeight: "700",
+    width: width * 0.9,
+    borderBottomWidth: 0.8,
+    borderColor: "#ebebeb",
+    alignSelf: "center",
+    textAlign: "center",
+    margin: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    backgroundColor: "#fcfcfc"
   },
   info_title: {
-    marginTop: 10,
-    marginLeft: 20,
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "black",
-    alignSelf: "stretch"
+    alignSelf: "stretch",
+    marginLeft: 22,
+    fontSize: 11, 
+    fontWeight: "bold", 
+    color: "grey", 
+    opacity: 0.8,
+    marginTop: 5
   }
 })

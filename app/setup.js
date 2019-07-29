@@ -25,6 +25,7 @@ import searchScreen from './screens/search'
 import categoryScreen from './screens/category'
 import listScreen from './screens/list'
 import skillDetailsScreen from './screens/skill_details'
+import reviewListScreen from './screens/review_list'
 
 const BottomTabNavigator = createBottomTabNavigator(
   {
@@ -173,6 +174,12 @@ const AppStackNavigator = createStackNavigator(
     },
     SkillDetails: {
       screen: skillDetailsScreen,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    ReviewList: {
+      screen: reviewListScreen,
       navigationOptions: () => ({
         header: null
       })

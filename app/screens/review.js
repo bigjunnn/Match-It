@@ -9,6 +9,7 @@ import {
 import { Form, Input, Item } from "native-base"
 import { Header, Text, AirbnbRating, Button } from "react-native-elements"
 import firebase from "firebase"
+import algoliasearch from 'algoliasearch/reactnative'
 
 var width = Dimensions.get("window").width
 var height = Dimensions.get("window").height
@@ -46,7 +47,8 @@ export default class Ratings extends React.Component {
       reviewer_id: this.state.user.uid,
       reviewer_name: this.state.user.displayName,
       service_rate: this.state.service_rate,
-      service_review: this.state.service_review
+      service_review: this.state.service_review,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
     })
   }
 
@@ -69,6 +71,26 @@ export default class Ratings extends React.Component {
         ref.update({
           review_overall: avg
         })
+
+        var client = algoliasearch('8KZO6PN2AS', '895e84f4ba2a65f489107006009abc4f')
+        const index = client.initIndex('Listing')
+
+        window = undefined
+        firebase.firestore().collection("Listing").doc(this.state.item_key)
+          .get().then(doc => {
+            return doc.data()
+          }).then(object => {
+            // update only sales attribute of existing item
+            index.partialUpdateObject({
+              review_overall: avg,
+              review_count: object.review_count,
+              review_stars: object.review_stars,
+              objectID: this.state.item_key
+            }, (err, content) => {
+              if (err) throw err;
+              console.log(content);
+            });
+          })
       })
   }
 
@@ -82,7 +104,8 @@ export default class Ratings extends React.Component {
       reviewer_id: this.state.user.uid,
       reviewer_name: this.state.user.displayName,
       provider_rate: this.state.provider_rate,
-      provider_review: this.state.provider_review
+      provider_review: this.state.provider_review,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
     })
   }
 
