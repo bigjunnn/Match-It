@@ -37,7 +37,7 @@ export default class SkillDetails extends React.Component {
         key={index}
         source={{ uri: this.state.images[index] }}
         style={{
-          height: height * 0.3,
+          height: height * 0.6,
           width: width * 1,
           resizeMode: "stretch"
         }}
@@ -112,7 +112,7 @@ export default class SkillDetails extends React.Component {
             </Text>
 
             <Swiper
-              style={{ height: height * 0.3 }}
+              style={{ height: height * 0.6 }}
               horizontal={true}
               showsButtons={true}
               containerStyle={{ alignSelf: "stretch" }}

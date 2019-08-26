@@ -256,8 +256,8 @@ export default class Details extends React.Component {
         itemid: this.state.key,
         itemname: this.state.details.title,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
-        price: this.state.details.price,
-        price_type: this.state.details.price_type
+        price: this.state.packages[0].price,
+        price_type: this.state.packages[0].price_type
       })
       .then(() => {
         alert("Listing has been bookmarked!")

@@ -79,6 +79,7 @@ class Profile extends React.Component {
   onRefresh = () => {
     this.setState({ refreshing: true })
     this.renderListings()
+    this.renderSkills()
   }
 
   renderListings() {

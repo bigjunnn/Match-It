@@ -7,13 +7,12 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  AsyncStorage,
   Dimensions,
   ScrollView,
   Platform
 } from "react-native"
 import ImagePicker from "react-native-image-crop-picker"
-import { Item, Input, Label} from "native-base"
+import { Item, Input, Label, DatePicker} from "native-base"
 import { Header, Button } from "react-native-elements"
 import { TextField } from "react-native-material-textfield"
 import firebase from "firebase"
@@ -49,7 +48,8 @@ export default class Create extends React.Component {
       text: "",
       errors: "",
       disableAdd: false,
-      disableMinus: true
+      disableMinus: true,
+      algolia: ""
     }
   }
 
@@ -179,11 +179,20 @@ export default class Create extends React.Component {
   }
 
   updateTags() {
+    let arr = this.state.tags.slice()
     let ref = firebase.firestore().collection('Tags')
     let FieldValue = firebase.firestore.FieldValue
-    this.state.tags.forEach((item) => {
-      ref.doc(item).update({
-        value: FieldValue.increment(1)  
+    arr.forEach((item) => {
+      ref.doc(item).get().then(snapshot => {
+        if (snapshot.exists) {
+          ref.doc(item).update({
+            value: FieldValue.increment(1)  
+          })
+        } else {
+          ref.doc(item).set({
+            value: 1 
+          })
+        }
       })
     })
   }
@@ -192,10 +201,10 @@ export default class Create extends React.Component {
     window = undefined
     let FieldValue = firebase.firestore.FieldValue
     let ref = firebase.firestore().collection('Listing').doc()
-    let setDoc = ref.set({
+    let algolia = {
       id: ref.id,
       userid: firebase.auth().currentUser.uid,
-      createdAt: FieldValue.serverTimestamp(),
+      createdAt: Date.now(),
       title: this.state.title,
       type: this.state.type,
       category: this.state.selectedItems[0],
@@ -204,7 +213,9 @@ export default class Create extends React.Component {
       description: this.state.description,
       sales: 0,
       price: parseInt(this.state.package[0].price, 10)
-    }).then(() => {
+    }
+    this.setState({ algolia })
+    let setDoc = ref.set(algolia).then((doc) => {
       this.uploadImages(ref.id, () => this.updateAlgolia(ref.id))
     }).then(() => {
       this.updateTags()
@@ -215,21 +226,18 @@ export default class Create extends React.Component {
     var client = algoliasearch('8KZO6PN2AS', '895e84f4ba2a65f489107006009abc4f')
     const index = client.initIndex('Listing')
 
-    window = undefined
-    firebase.firestore().collection('Listing').doc(key)
-      .get().then(doc => {
-        let records = []
-        const childKey = doc.id
-        const childData = doc.data()
-        // set Algolia objectID as Firebase .key
-        childData.objectID = childKey
-        records.push(childData)
-        // Add or update new objects to Algolia
-        index.saveObjects(records)
-      }).then(() => {
-        alert("Your Listing has been uploaded to the marketplace!")
-        this.props.navigation.navigate("Home")
-      })
+    let records = []
+    let algolia = this.state.algolia
+    const childData = this.state.algolia
+    // set Algolia objectID as Firebase .key
+    childData.objectID = key
+    records.push(childData)
+    // Add or update new objects to Algolias
+    index.saveObjects(records).then(() => {
+      this.setState({ algolia: "" })
+      alert("Your Listing has been uploaded to the marketplace!")
+      this.props.navigation.navigate("Home")
+    })
   }
 
   uploadImage(image, image_name, listingKey) {
@@ -276,8 +284,13 @@ export default class Create extends React.Component {
       arr.push(url)
       urls = arr
     }
-    
-    firebase.firestore().collection('Listing').doc(listingKey)
+
+    let algolia = this.state.algolia
+    algolia.photo = urls
+    this.setState({ algolia })
+
+    let ref = firebase.firestore().collection('Listing').doc(listingKey)
+    ref
     .update({ photo: urls })
     .then(() => {
       this.resetFields()

@@ -51,10 +51,9 @@ export default class Home extends React.Component {
         <Header
           centerComponent={{
             text: "Bookmarks",
-            style: { fontSize: 30, fontFamily: "Lobster-Regular" }
+            style: { fontSize: 20, fontWeight: "bold" }
           }}
-          // rightComponent={<Icon name='search' />}
-          backgroundColor="#f7ccc3"
+          backgroundColor="white"
         />
 
         <ScrollView>

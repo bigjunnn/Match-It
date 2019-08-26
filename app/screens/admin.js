@@ -27,7 +27,7 @@ export default class Home extends React.Component {
       .child("CGIx1TmGQqYajo5jn7WXiiGvwrx2")
 
     // get admin's pending skills approval
-    adminSkillRef.once("value").then(snapshot => {
+    adminSkillRef.on("value", snapshot => {
       let user_ref = firebase.database().ref("Users")
       var items = []
       snapshot.forEach(child => {
@@ -45,34 +45,6 @@ export default class Home extends React.Component {
       })
       this.setState({ skills: items })
     })
-  }
-
-  // Creates a skill reference for specified user, then deletes the reference for admin user
-  approveSkill(item) {
-    var skillData = {
-      userid: item.userid,
-      userdp: item.userdp,
-      skillName: item.skillName,
-      category: item.category,
-      description: item.description,
-      image: item.image
-    }
-
-    var user_ref = firebase.database().ref("Skills").child(item.userid)
-    var skillKey = user_ref.push(skillData).key
-    user_ref.child(skillKey).update({ skill_id: skillKey })
-    this.rejectSkill(item.skill_id)
-
-    alert("You have approved this skill submission")
-  }
-
-  // Deletes the reference for admin user only
-  rejectSkill(key) {
-    let user = firebase.auth().currentUser
-    var user_ref = firebase.database().ref("Skills").child(user.uid).child(key)
-    user_ref.remove()
-
-    alert("You have rejected this skill submission")
   }
 
   handleSignOut = () => {
